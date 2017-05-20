@@ -31,7 +31,7 @@ private:
 class server_ttl_comp
 {
 public:
-	bool operator()(const server_ttl* left, const server_ttl* right)
+	bool operator()(const server_ttl* left, const server_ttl* right)const
 	{
 		return left->get_when() < right->get_when();
 	}
