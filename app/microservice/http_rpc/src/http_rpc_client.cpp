@@ -4,10 +4,10 @@
 
 namespace acl
 {
-	extern char * var_confg_nameserver_register_find_service;
+	char * var_confg_nameserver_register_find_service;
 
-	extern int var_confg_rpc_conn_check_inter;
-	extern int var_confg_rpc_conn_check_timeout;
+	int var_confg_rpc_conn_check_inter;
+	int var_confg_rpc_conn_check_timeout;
 
 	http_rpc_client::http_rpc_client()
 	{
@@ -24,7 +24,7 @@ namespace acl
 		conn_manager_ = new http_request_manager();
 
 
-		acl::connect_monitor* monitor = new acl::connect_monitor(*conn_manager_);
+		connect_monitor* monitor = new connect_monitor(*conn_manager_);
 
 		(*monitor).
 			set_check_inter(var_confg_rpc_conn_check_inter).
@@ -35,7 +35,7 @@ namespace acl
 	}
 
 	http_rpc_client::status_t 
-		http_rpc_client::invoke_http_req2(const string &service_name,
+		http_rpc_client::invoke_http_req(const string &service_name,
 		const char *context_type,
 		const string&req_data,
 		string &resp_buffer)
@@ -43,8 +43,9 @@ namespace acl
 		status_t status;
 		std::vector<connect_pool*> pools;
 
-		if (!get_connect_pool2(service_name, pools))
-			return status_t(-1, string("get_connect_pool2 failed: ") += service_name);
+		if (!get_connect_pool(service_name, pools))
+			return status_t(-1,
+				string("get_connect_pool2 failed: ") += service_name);
 
 		for (size_t i = 0; i < pools.size(); i++)
 		{
@@ -125,7 +126,8 @@ namespace acl
 		return status_t();
 	}
 
-	bool http_rpc_client::get_connect_pool(const string &service_name, std::vector<connect_pool*> &pools)
+	bool http_rpc_client::find_connect_pool(const string &service_name, 
+		std::vector<connect_pool*> &pools)
 	{
 
 		lock_guard guard(service_addrs_locker_);
@@ -149,15 +151,16 @@ namespace acl
 		return !pools.empty();
 	}
 
-	bool http_rpc_client::get_connect_pool2(const string &service_name, std::vector<connect_pool*> &pools)
+	bool http_rpc_client::get_connect_pool(const string &service_name,
+		std::vector<connect_pool*> &pools)
 	{
-		if (!get_connect_pool(service_name, pools))
+		if (!find_connect_pool(service_name, pools))
 		{
 			std::vector<string> addrs;
 			if (rpc_find_service_addr(service_name, addrs))
 			{
 				add_service_addr(service_name, addrs);
-				return get_connect_pool(service_name, pools);
+				return find_connect_pool(service_name, pools);
 			}
 		}
 		return false;
@@ -169,7 +172,7 @@ namespace acl
 	{
 	
 		std::vector<connect_pool* >pools;
-		if (!get_connect_pool(
+		if (!find_connect_pool(
 			var_confg_nameserver_register_find_service, 
 			pools))
 			return false;
@@ -192,15 +195,7 @@ namespace acl
 				break;
 		}
 
-		json _json;
-
-		_json.update(buffer);
-		if (!_json.finish())
-		{
-			logger_error("json error,: %s",buffer.c_str());
-			return false;
-		}
-		std::pair<bool, std::string> ret = gson(_json.get_root(), resp);
+		std::pair<bool, std::string> ret = gson(buffer, resp);
 		if (!ret.first)
 		{
 			logger_error("gson error: %s", ret.second.c_str());
@@ -254,7 +249,8 @@ namespace acl
 		return;
 	}
 
-	void http_rpc_client::add_service_addr(const string &service_name, const string &addr)
+	void http_rpc_client::add_service_addr(const string &service_name, 
+		const string &addr)
 	{
 		lock_guard guard(service_addrs_locker_);
 

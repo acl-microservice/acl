@@ -1,10 +1,11 @@
 #pragma once
 namespace acl
 {
-	class http_rpc_service: public master_threads,
-		public singleton2<http_rpc_service>
+	class http_rpc_server: public master_threads
 	{
 	public:
+		static http_rpc_server& get_instance();
+
 		/**
 		* 注册消息处理函数
 		* @param func_name {const char*} 函数名,用来匹配消息
@@ -13,16 +14,18 @@ namespace acl
 		* @return {bool} 如果返回 false 则表示注册失败
 		*/
 		template<class Context, class ReqType, class RespType>
-		bool regist_json_message_handle(const char *func_name, Context *ctx,
+		bool regist_json_msg_handler(const char *func_name, Context *ctx,
 			bool(Context::*func)(const ReqType &, RespType &))
 		{
-			return json_message_handle_register::get_instance.regist(func_name, ctx, func);
+			return json_msg_handlers::get_instance().add(func_name, ctx, func);
 		}
 
 		int run(int argc, char *argv[]);
 	private:
 		//singleton 
-		http_rpc_service();
+		http_rpc_server();
+		http_rpc_server(const http_rpc_server&);
+		http_rpc_server &operator=(const http_rpc_server&);
 
 		void init_master_default_tbl();
 
@@ -40,7 +43,8 @@ namespace acl
 		virtual void thread_on_close(socket_stream* stream);
 
 		/**
-		* 当某个网络连接的 IO 读写超时时的回调函数，如果该函数返回 true 则表示继续等待下一次
+		* 当某个网络连接的 IO 读写超时时的回调函数，
+		* 如果该函数返回 true 则表示继续等待下一次
 		* 读写，否则则希望关闭该连接
 		* @param stream {socket_stream*}
 		* @return {bool} 如果返回 false 则表示子类要求关闭连接，而不

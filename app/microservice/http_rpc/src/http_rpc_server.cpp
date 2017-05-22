@@ -4,11 +4,16 @@
 
 namespace acl
 {
-	char *var_confg_nameserver_register_find_service;
-	int var_confg_rpc_conn_check_inter;
-	int var_confg_rpc_conn_check_timeout;
+	extern char *var_confg_nameserver_register_find_service;
+	extern char *var_confg_nameserver_register_add_service;
+	extern char *var_confg_nameserver_register_del_service;
 
-	http_rpc_service::http_rpc_service()
+	extern int var_confg_rpc_conn_check_inter;
+	extern int var_confg_rpc_conn_check_timeout;
+
+	extern int var_cfg_register_service_inter;
+
+	http_rpc_server::http_rpc_server()
 	{
 		acl::acl_cpp_init();
 		init_master_default_tbl();
@@ -19,17 +24,30 @@ namespace acl
 		set_cfg_bool(var_conf_bool_tab);
 	}
 
-	void http_rpc_service::init_master_default_tbl()
+	void http_rpc_server::init_master_default_tbl()
 	{
-		var_conf_int_tab = new master_int_tbl[5]{ 
-			{"redis_conn_timeout", 30, &var_cfg_redis_conn_timeout, 0, 0},
+		var_conf_int_tab = new master_int_tbl[6]{ 
+			{ "redis_conn_timeout", 30, &var_cfg_redis_conn_timeout, 0, 0},
 			{ "redis_rw_timeout", 30, &var_cfg_redis_rw_timeout, 0, 0 },
-			{ "var_confg_rpc_conn_check_inter", 1, &var_confg_rpc_conn_check_inter, 0, 0 },
-			{ "var_confg_rpc_conn_check_timeout", 5, &var_confg_rpc_conn_check_timeout, 0, 0 },
+			
+			{ 
+				"var_confg_rpc_conn_check_inter", 1, 
+				&var_confg_rpc_conn_check_inter, 0, 0 
+			},
+			
+			{ 
+				"var_confg_rpc_conn_check_timeout", 5,
+				&var_confg_rpc_conn_check_timeout, 0, 0 
+			},
+			{ 
+				"var_cfg_register_service_inter", 3, 
+				&var_cfg_register_service_inter ,0, 0
+			},
 
 			{ 0, 0 , 0 , 0, 0 }
 		};
-		var_conf_str_tab = new master_str_tbl[5]{
+		var_conf_str_tab = new master_str_tbl[7]{
+
 			{ "redis_addr", "", &var_cfg_redis_addr},
 			{ "memcache_addr", "", &var_cfg_memcache_addr},
 			{ "memcache_addr", "", &var_cfg_memcache_addr },
@@ -38,6 +56,18 @@ namespace acl
 			{ "var_confg_nameserver_register_find_service",
 				"/nameservice/register/find_service", 
 			&var_confg_nameserver_register_find_service },
+
+			{
+				"var_confg_nameserver_register_add_service", 
+				"/nameservice/register/add_service", 
+				&var_confg_nameserver_register_add_service 
+			},
+
+			{
+				"var_confg_nameserver_register_del_service",
+				"/nameservice/register/del_service",
+				&var_confg_nameserver_register_del_service
+			},
 
 			{ 0, 0 , 0 }
 		};
@@ -50,7 +80,14 @@ namespace acl
 		};
 	}
 
-	int http_rpc_service::run(int argc, char *argv[])
+
+	http_rpc_server& http_rpc_server::get_instance()
+	{
+		static http_rpc_server instance;
+		return instance;
+	}
+
+	int http_rpc_server::run(int argc, char *argv[])
 	{
 		if (argc >= 2 && strcmp(argv[1], "alone") == 0)
 		{
@@ -74,7 +111,7 @@ namespace acl
 
 	
 
-	void http_rpc_service::proc_on_init()
+	void http_rpc_server::proc_on_init()
 	{
 		if (var_cfg_redis_addr)
 		{
@@ -90,9 +127,12 @@ namespace acl
 			access_list::get_instance()
 				.set_allow_clients(var_cfg_allow_clients);
 		}
+		//init instances;
+		http_rpc_client::get_instance();
+		service_register::get_instance().start();
 	}
 
-	void http_rpc_service::thread_on_close(socket_stream* stream)
+	void http_rpc_server::thread_on_close(socket_stream* stream)
 	{
 		http_rpc_servlet *servlet = (http_rpc_servlet *)stream->get_ctx();
 		session *sess = &servlet->getSession();
@@ -100,13 +140,13 @@ namespace acl
 		delete sess;
 	}
 
-	bool http_rpc_service::thread_on_timeout(socket_stream* stream)
+	bool http_rpc_server::thread_on_timeout(socket_stream* stream)
 	{
 		//keep read next time;
 		return true;
 	}
 
-	bool http_rpc_service::thread_on_accept(socket_stream* stream)
+	bool http_rpc_server::thread_on_accept(socket_stream* stream)
 	{
 		const char* peer = stream->get_peer(false);
 
@@ -132,7 +172,7 @@ namespace acl
 		return true;
 	}
 
-	bool http_rpc_service::thread_on_read(socket_stream* stream)
+	bool http_rpc_server::thread_on_read(socket_stream* stream)
 	{
 		http_rpc_servlet *servlet = (http_rpc_servlet *)stream->get_ctx();
 		if (servlet == NULL)
@@ -145,7 +185,7 @@ namespace acl
 	}
 
 
-	session * http_rpc_service::get_session()
+	session * http_rpc_server::get_session()
 	{
 		if (redis_cluster_cli_)
 		{

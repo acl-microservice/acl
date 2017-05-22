@@ -10,7 +10,7 @@ namespace acl
 
 		HttpServletResponse *get_httpServletResponse();
 
-	protected:
+	private:
 		virtual bool doGet(HttpServletRequest&, HttpServletResponse&);
 
 		virtual bool doPost(HttpServletRequest&, HttpServletResponse&);
@@ -20,8 +20,9 @@ namespace acl
 		virtual bool doError(HttpServletRequest&, HttpServletResponse&);
 
 		bool read_http_body(HttpServletRequest &req, string &body);
-	private:
-		message_handle *get_message_handle(const string &message_type, const string &func_name);
+
+		func_handle *get_message_handle(const string &message_type, 
+			const string &func_name);
 
 		HttpServletRequest *req_;
 		HttpServletResponse *resp_;
