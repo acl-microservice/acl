@@ -83,10 +83,20 @@ void gsoner::set_default_optional()
 	default_ = false;
 }
 
+std::string gsoner::get_gen_head_file()
+{
+	return gen_header_filename_;
+}
+std::string gsoner::get_gen_source_file()
+{
+	return gen_source_filename_;
+}
+
 void gsoner::set_header_filename(const std::string &filename)
 {
 	gen_header_filename_ = filename;
 }
+
 
 void gsoner::set_source_filename(const std::string &filename)
 {
@@ -335,6 +345,22 @@ gsoner::function_code_t gsoner::gen_unpack_code(const object_t &obj)
 
 	code.definition_ptr_ += prefix + obj.name_ + " *$obj)";
 	code.definition_ptr_ += "\n{\n" + tab_ + "return gson($node, *$obj);\n}\n\n";
+
+	//
+	code.declare2_ += "std::pair<bool,std::string> gson(const acl::string &str, ";
+	code.declare2_ += obj.name_ + " &$obj);";
+
+	code.definition2_ += "std::pair<bool,std::string> gson(const acl::string &str, ";
+	code.definition2_ += obj.name_ + " &$obj)";
+	code.definition2_ += "\n{\n";
+	code.definition2_ += tab_ + "acl::json _json;\n";
+	code.definition2_ += tab_ + "_json.update($str.c_str());\n";
+	code.definition2_ += tab_ + "if (!_json.finish())\n";
+	code.definition2_ += tab_ + "{\n";
+	code.definition2_ += tab_ + tab_ + "return std::make_pair(false, \"json not finish error\");\n";
+	code.definition2_ += tab_ + "}\n";
+	code.definition2_ += tab_ + "return gson(_json.get_root(), $obj);\n";
+	code.definition2_ += "}\n\n";
 
 	return code;
 }
@@ -1278,17 +1304,17 @@ bool gsoner::read_file(const char *filepath)
 
 std::string gsoner::get_filename(const char *filepath)
 {
-	std::string  filename;
-	int i = (int) strlen(filepath) - 1;
-
-	while (i >= 0 && (filepath[i] != '\\' || filepath[i] != '/'))
+	std::string  filename(filepath);
+	size_t pos = filename.find_last_of('\\');
+	if (pos == filename.npos)
 	{
-		filename.push_back(filepath[i]);
-		i--;
+		pos = filename.find_last_of('/');
 	}
 
-	std::reverse(filename.begin(), filename.end());
-
+	if (pos != filename.npos)
+	{
+		return filename.substr(pos + 1);
+	}
 	return filename;
 }
 
@@ -1414,7 +1440,6 @@ void gsoner::parse_code()
 		return;
 	}
 }
-
 std::string gsoner::get_include_files()
 {
 	std::string str;
@@ -1422,7 +1447,7 @@ std::string gsoner::get_include_files()
 		itr != files_.end(); ++itr)
 	{
 		str += "#include \"";
-		str += *itr;
+		str += get_filename(itr->c_str());
 		str += "\"\n";
 	}
 
@@ -1434,9 +1459,21 @@ void gsoner::gen_gson()
 	const char *namespace_start = "namespace acl\n{";
 	const char *namespace_end = "\n}///end of acl.\n";
 
+	if (files_.size() == 1)
+	{
+		std::string filename = get_filename(files_.front().c_str());
+		filename = filename.substr(0, filename.find_last_of('.'));
+		gen_header_filename_ = filename +".gson.h";
+		gen_source_filename_ = filename + ".gson.cpp";
+	}
+
+	std::cout << "write header file:"<< gen_header_filename_ << std::endl;
+	std::cout << "write source file:" << gen_source_filename_ << std::endl;
+
 	write_source("#include \"stdafx.h\"\n");
 	write_source(get_include_files());
 	write_source("#include \"" + gen_header_filename_ + "\"\n");
+
 	write_source("#include \"acl_cpp/serialize/gson_helper.ipp\"\n");
 
 	write_header(namespace_start);
@@ -1452,14 +1489,19 @@ void gsoner::gen_gson()
 		write_header(('\n' + tab_ + pack.declare2_));
 		write_header(('\n' + tab_ + pack.declare_));
 		write_header(('\n' + tab_ + pack.declare_ptr_));
+
 		write_header('\n' + tab_ + unpack.declare_);
-		write_header('\n' + tab_ + unpack.declare_ptr_);
+		write_header('\n' + tab_ + unpack.declare_ptr_+"\n");
+		write_header('\n' + tab_ + unpack.declare2_);
+
 
 		write_source(add_4space(pack.definition_));
 		write_source(add_4space(pack.definition_ptr_));
 		write_source(add_4space(pack.definition2_));
+
 		write_source(add_4space(unpack.definition_));
 		write_source(add_4space(unpack.definition_ptr_));
+		write_source(add_4space(unpack.definition2_));
 	}
 
 	write_header(namespace_end);

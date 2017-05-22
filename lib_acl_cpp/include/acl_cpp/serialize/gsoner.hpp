@@ -31,7 +31,8 @@ public:
 	void set_default_optional();
 	void set_header_filename(const std::string &filename);
 	void set_source_filename(const std::string &filename);
-
+	std::string get_gen_head_file();
+	std::string get_gen_source_file();
 private:
 	enum code_parser_status_t
 	{
