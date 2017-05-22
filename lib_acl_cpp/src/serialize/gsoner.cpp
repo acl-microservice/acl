@@ -350,7 +350,7 @@ gsoner::function_code_t gsoner::gen_unpack_code(const object_t &obj)
 	code.declare2_ += "std::pair<bool,std::string> gson(const acl::string &str, ";
 	code.declare2_ += obj.name_ + " &$obj);";
 
-	code.definition2_ += "std::pair<bool,std::string> gson(const acl::string &str, ";
+	code.definition2_ += "std::pair<bool,std::string> gson(const acl::string &$str, ";
 	code.definition2_ += obj.name_ + " &$obj)";
 	code.definition2_ += "\n{\n";
 	code.definition2_ += tab_ + "acl::json _json;\n";
