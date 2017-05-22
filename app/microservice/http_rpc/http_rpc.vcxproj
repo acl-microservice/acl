@@ -123,7 +123,6 @@
     <ClInclude Include="include\json_msg_handle.hpp" />
     <ClInclude Include="include\http_rpc_servlet.h" />
     <ClInclude Include="include\rpc_context.h" />
-    <ClInclude Include="include\rpc_service.h" />
     <ClInclude Include="include\service_register.h" />
   </ItemGroup>
   <ItemGroup>
