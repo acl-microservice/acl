@@ -3,9 +3,9 @@
 #include <string>
 #include <iostream>
 
+acl::gsoner gr;
 static void create_files(const std::vector<std::string>& files)
 {
-	acl::gsoner gr;
 	gr.read_multi_file(files);
 	gr.parse_code();
 	gr.gen_gson();
@@ -36,22 +36,16 @@ static bool copy_file(const char* from, const char* to)
 	return true;
 }
 
-static bool copy_files(const char* to_path)
+static bool copy_files(const std::vector<std::string> &files, const char* to_path)
 {
-	const char* files[] = {
-		"gson.cpp",
-		"gson.h",
-		NULL,
-	};
-
 	acl::string buf, filepath;
 
-	for (size_t i = 0; files[i] != NULL; i++)
+	for (size_t i = 0; i < files.size(); i++)
 	{
-		buf.basename(files[i]);
+		buf.basename(files[i].c_str());
 		filepath.format("%s/%s", to_path, buf.c_str());
 
-		if (copy_file(files[i], filepath) == false)
+		if (copy_file(files[i].c_str(), filepath) == false)
 			return false;
 	}
 
@@ -162,8 +156,14 @@ int main(int argc, char* argv[])
 		if (pos == std::string::npos)
 			return 0;
 		path = path.substr(0, pos);
-		if(path.empty() == false)
-			copy_files(path.c_str());
+		if (path.empty() == false)
+		{
+			std::vector<std::string> files;
+			files.push_back(gr.get_gen_head_file());
+			files.push_back(gr.get_gen_source_file());
+			copy_files(files, path.c_str());
+		}
+			
 	}
 	return 0;
 }
