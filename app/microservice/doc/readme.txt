@@ -11,6 +11,62 @@ authservice 认证服务
 msgservice 消息推送服务
 monitorservice 服务监控
 
+nameservice api:
+	
+	注册服务
+	post http://ip:port/nameservice/register/add
+	{
+		"service_names":[
+			"/server_name/module/service1",
+			"/server_name/module/service2"
+		],
+		"server_addr":"127.0.0.1:10038"
+	}
+
+	response
+	{
+		"result":"ok"
+	}
+
+	删除服务
+	post http://ip:port/nameservice/register/del
+
+	{
+		"service_names":[
+				"/server_name/module/service1",
+				"/server_name/module/service2"
+			],
+		"server_addr":"127.0.0.1:10038"
+	}
+	response
+	{
+		"result":"ok"
+	}
+
+	获取单个服务
+	post http://ip:port/nameservice/register/find
+	{
+		"service_name":"/server_name/module/service"
+	}
+
+	response
+	{
+		"status":"ok",
+		"server_addr":["127.0.0.1:10038","127.0.0.1:10039"]
+	}
+
+	获取服务列表
+	get http://ip:port/nameservice/register/list
+
+	response
+	{
+		"services":[
+			{
+				"service_name":/server_name/module/service",
+				"server_addrs":["127.0.0.1:10038","127.0.0.1:10039"]
+			}
+		]
+	}
 
 publisher api:
 

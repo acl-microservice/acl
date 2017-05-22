@@ -20,7 +20,7 @@ namespace acl
 
 	message_handle * http_rpc_servlet::get_message_handle(const string &message_type, const string &func_name)
 	{
-		if (message_type == "application/json")
+		if (message_type == APPLICATION_JSON)
 		{
 			return json_message_handle_register::
 				get_instance().get_message_handle(func_name);

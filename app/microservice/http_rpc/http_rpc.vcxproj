@@ -25,7 +25,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
@@ -38,7 +38,7 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
@@ -115,17 +115,20 @@
     <ClInclude Include="include\http_rpc.h" />
     <ClInclude Include="include\http_rpc_client.h" />
     <ClInclude Include="include\json_message_handle_register.hpp" />
-    <ClInclude Include="include\rpc_service.h" />
+    <ClInclude Include="include\nameserver_proto.gson.h" />
+    <ClInclude Include="include\nameserver_proto.h" />
+    <ClInclude Include="include\http_rpc_service.h" />
     <ClInclude Include="include\message_handle.hpp" />
     <ClInclude Include="include\message_handle_register.hpp" />
     <ClInclude Include="include\json_message_handle.hpp" />
     <ClInclude Include="include\http_rpc_servlet.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\nameserver_proto.gson.cpp" />
     <ClCompile Include="src\access_list.cpp" />
     <ClCompile Include="src\http_rpc.cpp" />
     <ClCompile Include="src\http_rpc_client.cpp" />
-    <ClCompile Include="src\rpc_service.cpp" />
+    <ClCompile Include="src\http_rpc_service.cpp" />
     <ClCompile Include="src\http_rpc_servlet.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
