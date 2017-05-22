@@ -185,14 +185,27 @@ bool locker::unlock()
 /////////////////////////////////////////////////////////////////////////////
 
 lock_guard::lock_guard(locker& lk)
-: lk_(lk)
+: lk_(lk),
+locked_(true)
 {
 	acl_assert(lk_.lock());
 }
 
 lock_guard::~lock_guard()
 {
-	acl_assert(lk_.unlock());
+	if (locked_)
+	{
+		acl_assert(lk_.unlock());
+	}
 }
 
+void lock_guard::unlock()
+{
+	if (locked_)
+	{
+		locked_ = false;
+		acl_assert(lk_.unlock());
+	}
+	
+}
 } // namespace acl

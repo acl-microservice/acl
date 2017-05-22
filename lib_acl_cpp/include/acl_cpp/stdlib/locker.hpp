@@ -88,9 +88,10 @@ class ACL_CPP_API lock_guard
 public:
 	lock_guard(locker& lk);
 	~lock_guard();
-
+	void unlock();
 private:
 	locker& lk_;
+	bool locked_;
 };
 
 }  // namespace acl
