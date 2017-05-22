@@ -124,12 +124,12 @@
     <ClInclude Include="include\http_rpc_servlet.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\nameserver_proto.gson.cpp" />
     <ClCompile Include="src\access_list.cpp" />
     <ClCompile Include="src\http_rpc.cpp" />
     <ClCompile Include="src\http_rpc_client.cpp" />
     <ClCompile Include="src\http_rpc_service.cpp" />
     <ClCompile Include="src\http_rpc_servlet.cpp" />
+    <ClCompile Include="src\nameserver_proto.gson.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

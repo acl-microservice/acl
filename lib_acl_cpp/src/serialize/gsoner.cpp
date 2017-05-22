@@ -1491,8 +1491,8 @@ void gsoner::gen_gson()
 		write_header(('\n' + tab_ + pack.declare_ptr_));
 
 		write_header('\n' + tab_ + unpack.declare_);
-		write_header('\n' + tab_ + unpack.declare_ptr_+"\n");
-		write_header('\n' + tab_ + unpack.declare2_);
+		write_header('\n' + tab_ + unpack.declare_ptr_);
+		write_header('\n' + tab_ + unpack.declare2_+"\n");
 
 
 		write_source(add_4space(pack.definition_));
