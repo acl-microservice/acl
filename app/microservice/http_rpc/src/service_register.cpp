@@ -3,10 +3,6 @@
 
 namespace acl
 {
-	int var_cfg_register_service_inter;
-	char *var_confg_nameserver_register_add_service;
-	char *var_confg_nameserver_register_del_service;
-
 	service_register& service_register::get_instance()
 	{
 		static service_register inst;
@@ -46,7 +42,13 @@ namespace acl
 			long mills = (end.tv_sec - start.tv_sec) * 1000;
 			mills += (end.tv_usec - start.tv_usec) / 1000;
 
+			mills = http_rpc_config::var_cfg_regist_service_inter * 1000 - mills;
+
+			if (mills <= 0)
+				mills = 1;
+
 			acl_doze(mills);
+
 
 		} while (!is_stop_);
 
@@ -65,7 +67,7 @@ namespace acl
 
 		http_rpc_client::status_t status =
 			http_rpc_client::get_instance().
-			json_call(var_confg_nameserver_register_add_service,
+			json_call(http_rpc_config::var_cfg_add_service,
 				req, resp);
 
 		if (!status)
@@ -86,7 +88,7 @@ namespace acl
 
 		http_rpc_client::status_t status =
 			http_rpc_client::get_instance().
-			json_call(var_confg_nameserver_register_del_service,
+			json_call(http_rpc_config::var_cfg_del_service,
 				req, resp);
 		if (!status)
 		{
@@ -109,7 +111,7 @@ namespace acl
 
 		http_rpc_client::status_t status =
 			http_rpc_client::get_instance().
-			json_call(var_confg_nameserver_register_add_service,
+			json_call(http_rpc_config::var_cfg_add_service,
 				req, resp);
 		if (status)
 		{

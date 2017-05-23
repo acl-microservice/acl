@@ -17,8 +17,26 @@ namespace acl
 		bool regist_json_msg_handler(const char *func_name, Context *ctx,
 			bool(Context::*func)(const ReqType &, RespType &))
 		{
+			if (server_name_.empty())
+				logger_fatal("server_name empty");
+
+			if (server_name_ != http_rpc_config::var_cfg_servername)
+			{
+				//把服务注册到 nameserver 上去。
+				service_register::get_instance().
+					regist(http_rpc_config::var_confg_server_addr, func_name);
+			}
 			return json_msg_handlers::get_instance().add(func_name, ctx, func);
 		}
+
+		template<class ServiceType>
+		http_rpc_server &regist_service()
+		{
+			rpc_ctxs_.push_back(new ServiceType());
+			return *this;
+		}
+
+		void set_server_name(const string &name);
 
 		int run(int argc, char *argv[]);
 	private:
@@ -72,21 +90,10 @@ namespace acl
 
 		session *get_session();
 	private:
+		string server_name_;
+
+		std::vector<rpc_context*> rpc_ctxs_;
 
 		acl::redis_client_cluster *redis_cluster_cli_;
-
-		//config
-		char *var_cfg_redis_addr;
-		int var_cfg_redis_conn_timeout;
-		int var_cfg_redis_rw_timeout;
-		char *var_cfg_memcache_addr;
-		char *var_cfg_allow_clients;
-		//rpc 读写超时时间 秒
-		int var_cfg_rw_timeout;
-
-		master_int_tbl *var_conf_int_tab;
-		master_int64_tbl  *var_conf_int64_tab;
-		master_str_tbl  *var_conf_str_tab;
-		master_bool_tbl  *var_conf_bool_tab;
 	};
 }

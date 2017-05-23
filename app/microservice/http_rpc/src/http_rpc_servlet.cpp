@@ -22,11 +22,12 @@ namespace acl
 	func_handle * http_rpc_servlet::get_message_handle(
 		const string &message_type, const string &func_name)
 	{
-		if (message_type == APPLICATION_JSON)
+		if (message_type == "application/json")
 		{
 			return json_msg_handlers::
 				get_instance().get_message_handle(func_name);
 		}
+		logger_error("not message type :%s", message_type.c_str());
 		return NULL;
 	}
 

@@ -2,7 +2,7 @@
 
 namespace acl
 {
-	class http_rpc_client 
+	class http_rpc_client:public thread
 	{
 	public:
 		static http_rpc_client &get_instance()
@@ -53,7 +53,7 @@ namespace acl
 			string buffer;
 
 			status_t status = invoke_http_req(service_name, 
-				APPLICATION_JSON, 
+				"application/json",
 				gson(req_type), 
 				buffer);
 			if (!status)
@@ -99,6 +99,10 @@ namespace acl
 		bool rpc_find_service_addr(
 			const string &service_name, 
 			std::vector<string> &addrs);
+		
+		void update_services_addr();
+
+		virtual void *run();
 
 	private:
 		locker service_addrs_locker_;

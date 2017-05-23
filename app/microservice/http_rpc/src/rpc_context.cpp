@@ -1,7 +1,5 @@
 #include "http_rpc.h"
 
-#define SERVER_NAME "nameserver";
-
 namespace acl
 {
 
@@ -17,22 +15,25 @@ namespace acl
 		return *(HttpServletRequest*)acl_pthread_tls_get(&key);
 	}
 
-	nameservice::nameservice()
-	{
-		init();
-	}
+	//nameservice::nameservice()
+	//{
 
-	bool nameservice::add_service(
-		const nameserver_proto::add_services_req &req,
-		nameserver_proto::add_services_resp &resp)
-	{
-		return true;
-	}
+	//}
 
-	void nameservice::init()
-	{
-		http_rpc_server::get_instance().
-			regist_json_msg_handler(DEFINE_SERVICE_NAME(SERVER_NAME,nameservice,add_service), this, &nameservice::add_service);
-	}
+	//bool nameservice::add_service(
+	//	const nameserver_proto::add_services_req &req,
+	//	nameserver_proto::add_services_resp &resp)
+	//{
+	//	return true;
+	//}
+	////DEFINE_SERVICE_NAME(SERVER_NAME,nameservice,add_service)
+	//void nameservice::init()
+	//{
+	//	http_rpc_server &server = http_rpc_server::get_instance();
+	//	const char *add_service_name = 
+	//		DEFINE_SERVICE_NAME(SERVER_NAME, nameservice, add_service);
+
+	//	server.regist_json_msg_handler(add_service_name, this, &nameservice::add_service);
+	//}
 
 }

@@ -3,6 +3,12 @@
 #include <string>
 namespace nameserver_proto
 {
+	struct service_info
+	{
+		acl::string service_name;
+		std::vector<acl::string> server_addrs;
+	};
+
 	/*
 	json:
 	{
@@ -77,7 +83,30 @@ namespace nameserver_proto
 		acl::string service_name;
 		std::vector<acl::string> server_addrs;
 	};
+	/*
+	json:
+	{
+		"service_names":["b","a"]
+	}
 
+	{
+		"service_infos":{
+			"service_name":{
+				"service_name":"service_name",
+				"server_addrs":["120.0.0.1:9001","127.0.0.1:9002"]
+			}
+		}
+	}
+	*/
+	struct find_services_req
+	{
+		std::vector<acl::string> service_names;
+	};
+
+	struct find_services_resp
+	{
+		std::map<acl::string, service_info> service_infos;
+	};
 
 	/*
 	json:
@@ -91,11 +120,7 @@ namespace nameserver_proto
 	}
 	*/
 
-	struct service_info
-	{
-		acl::string service_name;
-		std::vector<acl::string> server_addrs;
-	};
+	
 	struct list_services_resp
 	{
 		std::vector<service_info> services;
