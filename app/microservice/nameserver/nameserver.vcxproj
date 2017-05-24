@@ -112,9 +112,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\nameserver.cpp" />
+    <ClCompile Include="src\service_mgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\nameserver.h" />
+    <ClInclude Include="include\service_mgr.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\http_rpc\http_rpc.vcxproj">

@@ -19,13 +19,13 @@ namespace acl
 		return resp_;
 	}
 
-	func_handle * http_rpc_servlet::get_message_handle(
+	func_handler * http_rpc_servlet::get_handle(
 		const string &message_type, const string &func_name)
 	{
 		if (message_type == "application/json")
 		{
-			return json_msg_handlers::
-				get_instance().get_message_handle(func_name);
+			return json_msg_handlers::get_instance()
+				.get_handle(func_name);
 		}
 		logger_error("not message type :%s", message_type.c_str());
 		return NULL;
@@ -40,8 +40,10 @@ namespace acl
 	bool http_rpc_servlet::doPost(HttpServletRequest& req, 
 		HttpServletResponse& resp)
 	{
-		func_handle *handle = get_message_handle(
-						req.getContentType(), req.getPathInfo());
+		func_handler *handle = get_handle(
+			req.getContentType(), 
+			req.getPathInfo());
+
 		if (!handle)
 		{
 			logger_error("can't find message handle for path: %s", 
@@ -51,11 +53,14 @@ namespace acl
 
 		string body;
 		string buffer;
+
 		if(read_http_body(req, body) == false)
 			return false;
+
 		acl_pthread_tls_set(acl_pthread_self(), &req, NULL);
 		bool ret = handle->invoke(body, buffer);
 
+		//Ğ´³¬Ê± »òÊÇÍøÂç´íÎó
 		if (!resp.write(buffer))
 			return false;
 		return ret;

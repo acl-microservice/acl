@@ -7,52 +7,16 @@ namespace acl
 	
 
 	http_rpc_server::http_rpc_server()
-	{
-		acl::acl_cpp_init();
-
+	{		
+		acl_assert(http_rpc_config::var_conf_int_tab);
+		acl_assert(http_rpc_config::var_conf_int64_tab);
+		acl_assert(http_rpc_config::var_conf_str_tab);
+		acl_assert(http_rpc_config::var_conf_bool_tab);
+	
 		set_cfg_int(http_rpc_config::var_conf_int_tab);
 		set_cfg_int64(http_rpc_config::var_conf_int64_tab);
 		set_cfg_str(http_rpc_config::var_conf_str_tab);
 		set_cfg_bool(http_rpc_config::var_conf_bool_tab);
-	}
-
-	void http_rpc_server::init_master_default_tbl()
-	{
-		
-	}
-
-
-	http_rpc_server& http_rpc_server::get_instance()
-	{
-		static http_rpc_server instance;
-		return instance;
-	}
-
-	int http_rpc_server::run(int argc, char *argv[])
-	{
-		acl::log::stdout_open(true);
-
-		if (argc >= 2 && strcmp(argv[1], "alone") == 0)
-		{
-			const char* addr = "10080";
-			printf("listen on: %s\r\n", addr);
-			if (argc >= 3)
-				run_alone(addr, argv[2], 0, 100);  // 单独运行方式
-			else
-				run_alone(addr, NULL, 0, 100);  // 单独运行方式
-
-			printf("Enter any key to exit now\r\n");
-			getchar();
-		}
-		else
-			run_daemon(argc, argv);  // acl_master 控制模式运行
-
-		return 0;
-	}
-
-	void http_rpc_server::set_server_name(const string &name)
-	{
-		server_name_ = name;
 	}
 
 	void http_rpc_server::proc_on_init()
@@ -76,11 +40,13 @@ namespace acl
 		http_rpc_client::get_instance();
 
 		//nameserver not need service_register
+		acl_assert(http_rpc_config::var_cfg_server_name);
+		string servername = string(http_rpc_config::var_cfg_server_name);
 
-		if (server_name_.empty())
+		if (servername.empty())
 			acl_assert("server_name empty.set_server_name() first");
 
-		if(string("nameserver") != server_name_)
+		if(string("nameserver") != servername)
 			service_register::get_instance().start();
 
 		//init rpc_context
@@ -138,14 +104,14 @@ namespace acl
 		if (servlet == NULL)
 			logger_fatal("servlet null!");
 
-		session *sess = get_session();
+		session *sess = create_session();
 		servlet->doRun(*sess, stream);
 
 		return true;
 	}
 
 
-	session * http_rpc_server::get_session()
+	session * http_rpc_server::create_session()
 	{
 		if (redis_cluster_cli_)
 		{

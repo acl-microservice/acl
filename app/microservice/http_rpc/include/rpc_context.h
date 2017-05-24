@@ -1,5 +1,4 @@
 #pragma once
-#include "nameserver_proto.h"
 namespace acl
 {
 	/*
@@ -8,26 +7,28 @@ namespace acl
 		这个架构是基于acl::master_threads 模型，提供服务接口会可能被多线程同时访问。
 		也就说 用户自己的数据 需要自己作多线程安全处理。
 	*/
+	class http_rpc_server;
 	class rpc_context
 	{
 	public:
+		rpc_context(http_rpc_server &server)
+			:server_(server)
+		{}
+
 		virtual ~rpc_context();
-		static HttpServletRequest &getHttpServletRequest();
+		/*
+		* service 初始化函数，这个函数被http_rpc_server 回调
+		*/
 		virtual void init() = 0;
+	protected:
+		/*
+		*  获取 HttpServletReques 对象，
+		*  注意：这个函数只有服务被调用过程中才能有效，
+		*  调用前后 HttpServletRequest 是不存在的
+		*/
+		static HttpServletRequest &getHttpServletRequest();
+
+		http_rpc_server &server_;
 	};
-
-
-
-	/*class nameservice:
-		public rpc_context
-	{
-	public:
-		nameservice();
-		bool add_service(const 
-			nameserver_proto::add_services_req &req, 
-			nameserver_proto::add_services_resp &resp );
-	private:
-		void init();
-	};*/
 }
 

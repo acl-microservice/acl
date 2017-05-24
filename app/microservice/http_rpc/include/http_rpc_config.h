@@ -11,6 +11,10 @@ namespace acl
 		extern master_str_tbl  *var_conf_str_tab;
 		extern master_bool_tbl  *var_conf_bool_tab;
 
+		//本服务器的名称
+		//默认：空 需要配置好
+		extern char *var_cfg_server_name;
+
 		//nameserver的名称
 		//默认：nameserver
 		extern char *var_cfg_nameserver;
@@ -27,12 +31,15 @@ namespace acl
 		extern int var_cfg_redis_conn_timeout;
 
 		//redis 读写超时时间 秒
+		//默认30秒
 		extern int var_cfg_redis_rw_timeout;
 
 		//memcache 服务地址
+		//默认是 空
 		extern char *var_cfg_memcache_addr;
 
 		//白名单 all 为任意client 都可以访问
+		//默认是all
 		extern char *var_cfg_allow_clients;
 
 		//rpc socket 读写超时时间 秒

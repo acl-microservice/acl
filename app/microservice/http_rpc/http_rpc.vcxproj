@@ -114,13 +114,14 @@
     <ClInclude Include="include\access_list.h" />
     <ClInclude Include="include\http_rpc.h" />
     <ClInclude Include="include\http_rpc_client.h" />
+    <ClInclude Include="include\http_rpc_config.h" />
     <ClInclude Include="include\json_msg_handlers.hpp" />
     <ClInclude Include="include\nameserver_proto.gson.h" />
     <ClInclude Include="include\nameserver_proto.h" />
     <ClInclude Include="include\http_rpc_server.h" />
-    <ClInclude Include="include\func_handle.hpp" />
+    <ClInclude Include="include\func_handler.hpp" />
     <ClInclude Include="include\msg_handlers.hpp" />
-    <ClInclude Include="include\json_msg_handle.hpp" />
+    <ClInclude Include="include\json_msg_handler.hpp" />
     <ClInclude Include="include\http_rpc_servlet.h" />
     <ClInclude Include="include\rpc_context.h" />
     <ClInclude Include="include\service_register.h" />

@@ -18,9 +18,18 @@
     <ClCompile Include="src\main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\nameserver.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service_mgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\nameserver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\service_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

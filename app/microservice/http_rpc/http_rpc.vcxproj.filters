@@ -36,12 +36,6 @@
     <ClInclude Include="include\service_register.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\json_msg_handle.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\func_handle.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\msg_handlers.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -52,6 +46,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\http_rpc_server.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\func_handler.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json_msg_handler.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\http_rpc_config.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

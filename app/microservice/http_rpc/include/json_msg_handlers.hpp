@@ -15,13 +15,13 @@ namespace acl
 			bool(Context::*func)(const ReqType &, RespType &))
 		{
 			acl::lock_guard guard(lock_);
-			if (check_method_exist(func_name))
+			if (exist(func_name))
 			{
 				logger_error("function exist: %s", func_name);
 				return false;
 			}
 			message_handles_.insert( std::make_pair(func_name,
-				new json_msg_handle<Context, ReqType, RespType>(
+				new json_msg_handler<Context, ReqType, RespType>(
 					func_name, ctx, func)));
 
 			return true;

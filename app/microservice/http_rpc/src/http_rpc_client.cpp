@@ -1,6 +1,4 @@
 #include "http_rpc.h"
-#include "nameserver_proto.h"
-#include "nameserver_proto.gson.h"
 
 namespace acl
 {
