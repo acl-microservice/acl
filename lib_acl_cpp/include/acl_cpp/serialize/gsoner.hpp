@@ -24,7 +24,7 @@ class ACL_CPP_API gsoner
 public:
 	gsoner ();
 	bool read_file(const char *filepath);
-	bool read_multi_file(const std::vector<std::string>& files);
+	bool read_file(const std::vector<std::string>& files);
 	void parse_code();
 	void gen_gson();
 	void set_default_required();
@@ -56,6 +56,7 @@ private:
 			e_list,
 			e_vector,
 			e_map,
+			e_set,
 			e_object,
 		};
 
@@ -135,6 +136,7 @@ private:
 
 	bool check_define();
 	bool check_pragma();
+	bool check_using_namespace();
 	std::list<std::string> get_initializelist ();
 	char cc;
 	int pos_;

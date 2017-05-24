@@ -474,6 +474,31 @@ static inline acl::json_node &gson(acl::json &json,
 	return gson(json, *objects);
 }
 
+
+//set
+
+template<class T>
+static inline acl::json_node &gson(acl::json &json,
+	const std::set<T> &objects)
+{
+	acl::json_node &node = json.create_array();
+	for (typename std::set<T>::const_iterator
+		itr = objects.begin(); itr != objects.end(); ++itr)
+	{
+		add_item(json, node, *itr);
+	}
+
+	return node;
+}
+
+template<class T>
+static inline acl::json_node &gson(acl::json &json,
+	const std::set<T> *objects)
+{
+	return gson(json, *objects);
+}
+
+
 //define number map
 template<class K, class V>
 typename enable_if<is_number<V>::value, acl::json_node &>::type
@@ -972,6 +997,62 @@ static inline gson(acl::json_node &node, std::vector<T*> *objs)
 	return std::make_pair(!!!objs->empty(), error_string);
 }
 
+//set
+
+template<class T>
+std::pair<bool, std::string>
+static inline gson(acl::json_node &node, std::set<T*> *objs)
+{
+	std::pair<bool, std::string> result;
+	acl::json_node *itr = node.first_child();
+	std::string error_string;
+
+	while (itr)
+	{
+		T* obj = new T;
+		result = gson(*itr, *obj);
+		if (result.first)
+		{
+			objs->insert(obj);
+		}
+		else
+		{
+			error_string.append(result.second);
+		}
+		itr = node.next_child();
+	}
+
+	return std::make_pair(!!!objs->empty(), error_string);
+}
+
+template<class T>
+std::pair<bool, std::string>
+static inline gson(acl::json_node &node, std::set<T> *objs)
+{
+	std::pair<bool, std::string> result;
+	acl::json_node *itr = node.first_child();
+	std::string error_string;
+
+	while (itr)
+	{
+		T obj;
+		result = gson(*itr, obj);
+		if (result.first)
+		{
+			objs->insert(obj);
+		}
+		else
+		{
+			error_string.append(result.second);
+			break;
+		}
+		itr = node.next_child();
+	}
+
+	return std::make_pair(!!!objs->empty(), error_string);
+}
+//
+
 template <class T>
 typename enable_if<is_object<T>::value,
 	std::pair<bool, std::string> >::type
@@ -987,6 +1068,8 @@ static inline gson(acl::json_node &node, T **obj)
 
 	return result;
 }
+
+
 
 ///////////////////////////////////////////map////////////////////////////////
 
