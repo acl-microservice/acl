@@ -5,18 +5,59 @@ class service_mgr : public acl::rpc_context
 private:
 	//service: addrs
 	struct service_ttl;
-	struct service_info
+
+	struct service_path
 	{
+		acl::string path_;
+		acl::string service_;
+		acl::string module_;
+		acl::string server_;
+	};
+	struct addr_info
+	{
+		addr_info()
+		{
+			regist_time_ = 0;
+			update_time_ = 0;
+		}
+		//server addr
 		acl::string addr_;
+		time_t regist_time_;
+		time_t update_time_;
+
 		std::list<service_ttl*>::iterator ttl_it_;
+	};
+
+	struct service
+	{
+		//interface name
+		acl::string name_;
+		//完整的路径/server/module/interface
+		acl::string service_path_;
+		//addr: addr_info
+		std::map<acl::string, addr_info> addrs_;
+	};
+
+	struct module
+	{
+		acl::string module_name_;
+		//service_name: service
+		std::map<acl::string, service> services_;
 	};
 
 	struct service_ttl
 	{
-		acl::string service_name_;
+		service_path service_path_;
 		acl::string addr_;
 		long long when_;
 	};
+
+	struct server_info
+	{
+		std::map<acl::string, module> modules_;
+	};
+
+
 public:
 	service_mgr(acl::http_rpc_server &server);
 
@@ -34,17 +75,17 @@ public:
 	bool del_service(const nameserver_proto::del_services_req &req,
 		nameserver_proto::del_services_resp &resp);
 
+	bool list_service(const nameserver_proto::list_services_req &req,
+		nameserver_proto::list_services_resp &resp);
+
 	void init();
 
 	void check_timeout();
 private:
 
 	acl::locker locker_;
-
 	int timeout_;
 
 	std::list<service_ttl*> service_ttl_;
-
-	//service_name: addrs
-	std::map<acl::string, std::map<acl::string, service_info*>> services_;
+	std::map<acl::string, server_info> services_;
 };

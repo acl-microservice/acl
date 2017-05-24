@@ -10,19 +10,16 @@ namespace acl
 
 	void http_rpc_client::init()
 	{
-		int  cocurrent = 100, 
-			conn_timeout = 100, 
-			rw_timeout = 200;
 
 		// 创建 HTTP 请求连接池集群管理对象
 		conn_manager_ = new http_request_manager();
+		connect_monitor* monitor =
+			new connect_monitor(*conn_manager_);
 
-
-		connect_monitor* monitor = new connect_monitor(*conn_manager_);
-
-		(*monitor).
-			set_check_inter(http_rpc_config::var_cfg_rpc_conn_check_inter).
-			set_conn_timeout(http_rpc_config::var_cfg_rpc_conn_check_timeout);
+		(*monitor).set_check_inter(
+				http_rpc_config::var_cfg_rpc_conn_check_inter).
+			set_conn_timeout(
+				http_rpc_config::var_cfg_rpc_conn_check_timeout);
 
 		// 启动后台检测线程
 		conn_manager_->start_monitor(monitor);
@@ -31,12 +28,13 @@ namespace acl
 		start();
 	}
 
-	http_rpc_client::status_t 
+	http_rpc_client::status_t
 		http_rpc_client::invoke_http_req(const string &service_name,
-		const char *context_type,
-		const string&req_data,
-		string &resp_buffer)
+			const char *context_type,
+			const string&req_data,
+			string &resp_buffer)
 	{
+
 		status_t status;
 		std::vector<connect_pool*> pools;
 
@@ -59,13 +57,14 @@ namespace acl
 		}
 		return status;
 	}
-	http_rpc_client::status_t  
-	http_rpc_client::invoke_http_req(
-			const string &http_path, 
-			http_request_pool *pool, 
-			const char *context_type, 
-			const string&req_data,
-			string &resp_buffer)
+
+
+	http_rpc_client::status_t http_rpc_client::invoke_http_req(
+		const string &http_path,
+		http_request_pool *pool,
+		const char *context_type,
+		const string&req_data,
+		string &resp_buffer)
 	{
 
 		// 从连接池中获取一个 HTTP 连接
@@ -74,13 +73,15 @@ namespace acl
 
 		if (conn == NULL)
 		{
-			logger_error("peek connect failed from %s",pool->get_addr());
+			logger_error("peek connect failed from %s",
+				pool->get_addr());
 
 			return status_t(-1, string("peek connect "
 				"failed from :") += pool->get_addr());
 		}
 
-		// 需要对获得的连接重置状态，以清除上次请求过程的临时数据
+		// 需要对获得的连接重置状态，
+		//以清除上次请求过程的临时数据
 		else
 			conn->reset();
 
@@ -96,9 +97,11 @@ namespace acl
 
 			return status_t(-1, "http_request failed");
 		}
+
 		resp_buffer.clear();
 		char  buf[8192];
 		int   ret = 0;
+
 		// 接收 HTTP 响应体数据
 		long long body_len = conn->body_length();
 		while (true)
@@ -110,12 +113,15 @@ namespace acl
 			{
 				_connect_guard.set_keep(false);
 
-				logger_error("http_request read_body error");
-				
-				return status_t(-1, "http_request read_body error");
+				logger_error("http_request "
+					"read_body error");
+
+				return status_t(-1, 
+					"http_request read_body error");
 			}
 			resp_buffer.append(buf, ret);
 		}
+
 		if (conn->http_status() != 200)
 		{
 			status_t retval(conn->http_status(), resp_buffer);
@@ -125,12 +131,13 @@ namespace acl
 		return status_t();
 	}
 
-	bool http_rpc_client::find_connect_pool(const string &service_name, 
+	bool http_rpc_client::find_connect_pool(
+		const string &service_name,
 		std::vector<connect_pool*> &pools)
 	{
 
 		lock_guard guard(service_addrs_locker_);
-		
+
 		http_rpc_service_info *info = service_addrs_[service_name];
 		if (info == NULL)
 		{
@@ -150,9 +157,11 @@ namespace acl
 		return !pools.empty();
 	}
 
-	bool http_rpc_client::get_connect_pool(const string &service_name,
+	bool http_rpc_client::get_connect_pool(
+		const string &service_name,
 		std::vector<connect_pool*> &pools)
 	{
+
 		if (!find_connect_pool(service_name, pools))
 		{
 			std::vector<string> addrs;
@@ -169,7 +178,7 @@ namespace acl
 		const string &service_name,
 		std::vector<string> &addrs)
 	{
-	
+
 		std::vector<connect_pool* >pools;
 		if (!find_connect_pool(
 			http_rpc_config::var_cfg_find_service,
@@ -182,7 +191,7 @@ namespace acl
 		//发起rpc 请求 服务信息
 		string buffer;
 
-		for (size_t i = 0; i < pools.size() ; i++)
+		for (size_t i = 0; i < pools.size(); i++)
 		{
 			status_t ret = invoke_http_req(
 				http_rpc_config::var_cfg_find_service,
@@ -209,41 +218,42 @@ namespace acl
 		addrs = resp.server_addrs;
 		return true;
 	}
-	
+
 	void http_rpc_client::update_services_addr()
 	{
-		
+
 		std::map<string, http_rpc_service_info*> old_service_addrs;
 		nameserver_proto::find_services_req req;
 		std::vector<connect_pool* >pools;
 
 		do
 		{
+			//lock
 			lock_guard guard(service_addrs_locker_);
 
 			if (service_addrs_.empty())
 				return;
-	
-			std::map<string, http_rpc_service_info*>::iterator
-				it = service_addrs_.begin();
+
+			std::map<string, http_rpc_service_info*>::iterator 
+				it= service_addrs_.begin();
 
 			for (; it != service_addrs_.end(); ++it)
 			{
 				//copy
-				http_rpc_service_info *info = new http_rpc_service_info(*it->second);
-				old_service_addrs[it->first] = info;
+				old_service_addrs[it->first] =
+					new http_rpc_service_info(*it->second);
 
 				req.service_names.push_back(it->first);
 			}
 
 		} while (false);
-		
+
 
 		if (!find_connect_pool(
 			http_rpc_config::var_cfg_find_services,
 			pools))
 		{
-			logger_error("find_connect_pool failed: %s", 
+			logger_error("find_connect_pool failed: %s",
 				http_rpc_config::var_cfg_find_services);
 			return;
 		}
@@ -252,22 +262,32 @@ namespace acl
 
 		//发起rpc 请求 服务信息
 		string buffer;
-
+		status_t status;
 		for (size_t i = 0; i < pools.size(); i++)
 		{
-			status_t ret = invoke_http_req(
+			status = invoke_http_req(
 				http_rpc_config::var_cfg_find_services,
 				(http_request_pool*)pools[i],
 				"application/json",
 				gson(req),
 				buffer);
-			if (ret)
+			if (status)
 				break;
 		}
+
+		//http request failed
+		if (!status)
+		{
+			logger_error("http request failed: %s",
+				status.error_str_.c_str());
+			return;
+		}
+			
+
 		std::pair<bool, std::string> ret = gson(buffer, resp);
 		if (!ret.first)
 		{
-			logger_error("gson error:%s",buffer);
+			logger_error("gson error:%s", buffer);
 			return;
 		}
 
@@ -275,12 +295,15 @@ namespace acl
 		//todo 优化
 		lock_guard guard(service_addrs_locker_);
 
-		std::map<string, http_rpc_service_info*>::iterator oit = old_service_addrs.begin();
-		for	(;oit != old_service_addrs.end(); ++oit)
+		std::map<string, http_rpc_service_info*>::iterator 
+			oit = old_service_addrs.begin();
+
+		for (; oit != old_service_addrs.end(); ++oit)
 		{
-			std::map<acl::string, nameserver_proto::service_info>::iterator 
-				sit = resp.service_infos.find(oit->first);
-			
+			std::map<acl::string, 
+				nameserver_proto::service_info>::iterator sit 
+				= resp.service_infos.find(oit->first);
+
 			if (sit == resp.service_infos.end())
 			{
 				//删除已经下线的服务
@@ -324,7 +347,9 @@ namespace acl
 			}
 
 			//dead addr
-			for (std::vector<string>::iterator it = info->addrs_.begin();
+			for (std::vector<string>::iterator it 
+				= info->addrs_.begin();
+
 				it != info->addrs_.end(); it++)
 			{
 				bool find = false;
@@ -346,14 +371,14 @@ namespace acl
 	}
 
 	void http_rpc_client::add_service_addr(
-		const string &service_name, 
+		const string &service_name,
 		const std::vector<string> &addrs)
 	{
 
 		lock_guard guard(service_addrs_locker_);
 
 		http_rpc_service_info * service_addr = NULL;
-		
+
 		std::map<string, http_rpc_service_info*>::iterator itr =
 			service_addrs_.find(service_name);
 
@@ -370,8 +395,8 @@ namespace acl
 		service_addr = itr->second;
 
 		for (size_t i = 0; i < addrs.size(); i++)
-		{			
-			for (size_t j = 0; j< service_addr->addrs_.size(); j++)
+		{
+			for (size_t j = 0; j < service_addr->addrs_.size(); j++)
 			{
 				if (service_addr->addrs_[j] == addrs[j])
 				{
@@ -383,7 +408,7 @@ namespace acl
 		return;
 	}
 
-	void http_rpc_client::add_service_addr(const string &service_name, 
+	void http_rpc_client::add_service_addr(const string &service_name,
 		const string &addr)
 	{
 		lock_guard guard(service_addrs_locker_);
@@ -403,7 +428,7 @@ namespace acl
 		}
 		service_addr = itr->second;
 
-		for (size_t i = 0; i< service_addr->addrs_.size(); i++)
+		for (size_t i = 0; i < service_addr->addrs_.size(); i++)
 		{
 			if (service_addr->addrs_[i] == addr)
 			{
@@ -413,6 +438,8 @@ namespace acl
 		service_addr->addrs_.push_back(addr);
 		return;
 	}
+
+
 	void *http_rpc_client::run()
 	{
 		do
@@ -427,7 +454,9 @@ namespace acl
 			long mills = (end.tv_sec - start.tv_sec) * 1000;
 			mills += (end.tv_usec - start.tv_usec) / 1000;
 
-			mills = http_rpc_config::var_cfg_update_service_inter * 1000 - mills;
+			mills = http_rpc_config::
+				var_cfg_update_service_inter * 1000 - mills;
+
 			if (mills < 0)
 				mills = 0;
 			//sleep

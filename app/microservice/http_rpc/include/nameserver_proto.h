@@ -1,12 +1,14 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <set>
 namespace nameserver_proto
 {
 	struct service_info
 	{
 		acl::string service_name;
-		std::vector<acl::string> server_addrs;
+		//Gson@optional
+		std::set<acl::string> server_addrs;
 	};
 
 	/*
@@ -80,7 +82,9 @@ namespace nameserver_proto
 	struct find_service_resp
 	{
 		acl::string status;
+		//Gson@optional
 		acl::string service_name;
+		//Gson@optional
 		std::vector<acl::string> server_addrs;
 	};
 	/*
@@ -105,6 +109,8 @@ namespace nameserver_proto
 
 	struct find_services_resp
 	{
+		acl::string status;
+		//Gson@optional
 		std::map<acl::string, service_info> service_infos;
 	};
 
@@ -120,9 +126,23 @@ namespace nameserver_proto
 	}
 	*/
 
+	/**
+	 * path 服务路劲：
+	 * / 获取全部
+	 * /server_name 获取/server_name 下面的所以服务列表
+	 * /server_name/module_name/ 获取/server_name/module_name 下面的所以服务列表
+	 * /server_name/module_name/service 获取/server_name/module_name/service 服务
+	 */
+
+	struct list_services_req
+	{
+		acl::string path;
+	};
 	
 	struct list_services_resp
 	{
+		acl::string status;
+		//Gson@optional
 		std::vector<service_info> services;
 	};
 }

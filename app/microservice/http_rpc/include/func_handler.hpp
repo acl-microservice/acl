@@ -19,6 +19,7 @@ namespace acl
 		# @return {bool} false 将会断开连接，true保持链接
 		*/
 		virtual bool invoke(const string &req, string &resp) = 0;
+
 	protected:
 		string func_name_;
 	};

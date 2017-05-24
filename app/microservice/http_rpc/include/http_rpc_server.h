@@ -2,7 +2,7 @@
 namespace acl
 {
      /**
-	  * 服务器的基类，集成实现init函数
+	  * 服务器的基类，继承实现init函数
 	  */
 	class http_rpc_server: public master_threads
 	{

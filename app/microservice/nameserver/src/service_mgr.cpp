@@ -10,147 +10,425 @@ service_mgr::~service_mgr()
 {
 
 }
-bool service_mgr::add(const nameserver_proto::add_services_req &req,
+//格式是 /server/module/interface
+
+static bool to_service_path(acl::string &path,
+	std::vector<acl::string> &tokens)
+{
+	if (path.empty() || path[0] != '/' ||
+		path[path.size() - 1] == '/')
+	{
+		return false;
+	}
+	tokens = path.split2("/");
+	if (tokens.empty() || tokens.size() != 3)
+	{
+		return false;
+	}
+	return true;
+}
+bool service_mgr::add(
+	const nameserver_proto::add_services_req &req,
 	nameserver_proto::add_services_resp &resp)
 {
-	acl::lock_guard guard(locker_);
+
+	if (req.service_names.empty())
+	{
+		resp.result = "service empty error";
+		return true;
+	}
+
+	std::vector<service_path> service_paths;
 
 	for (size_t i = 0; i < req.service_names.size(); i++)
 	{
-		service_info *info = NULL;
-		service_ttl *ttl = NULL;
-
-		info = services_[req.service_names[i]][req.server_addr];
-		if (!info)
+		acl::string path = req.service_names[i];
+		std::vector<acl::string> tokens;
+		if (!to_service_path(path, tokens))
 		{
-			info = new service_info;
-			ttl = new service_ttl;
-
-			ttl->addr_ = req.server_addr;
-			ttl->service_name_ = req.service_names[i];
-			ttl->when_ = time(NULL) + timeout_;
-			info->ttl_it_ = service_ttl_.insert(service_ttl_.end(), ttl);
-			info->addr_ = req.server_addr;
-			services_[req.service_names[i]][req.server_addr] = info;
-			continue;
+			resp.result = path += " service format error";
+			return true;
 		}
-		ttl = *(info->ttl_it_);
-		ttl->when_ = time(NULL) + timeout_;
-		service_ttl_.erase(info->ttl_it_);
-		info->ttl_it_ = service_ttl_.insert(service_ttl_.end(), ttl);
 
+		service_path _service_path;
+		_service_path.server_ = tokens[0];
+		_service_path.module_ = tokens[1];
+		_service_path.service_ = tokens[2];
+		_service_path.path_ = path;
+		service_paths.push_back(_service_path);
+	}
+
+	//locker mutithread safe
+	acl::lock_guard guard(locker_);
+
+	for (size_t i = 0; i < service_paths.size(); i++)
+	{
+		service_path path = service_paths[i];
+		module &module = services_[path.server_].modules_[path.module_];
+		service &service_ = module.services_[path.service_];
+		addr_info &addr = service_.addrs_[req.server_addr];
+
+		if (module.module_name_.empty())
+			module.module_name_ = path.module_;
+		if (service_.name_.empty())
+			service_.name_ = path.service_;
+
+		if (addr.regist_time_ == 0)
+		{
+			timeval now;
+			gettimeofday(&now, NULL);
+			addr.regist_time_ = time(NULL);
+			addr.update_time_ = time(NULL);
+			addr.addr_ = req.server_addr;
+
+			service_ttl *ttl = new service_ttl;
+			ttl->addr_ = req.server_addr;
+			ttl->service_path_ = path;
+			//milliseconds
+			ttl->when_ = now.tv_sec * 1000 + 
+				now.tv_usec / 1000;
+
+			addr.ttl_it_ = service_ttl_.
+				insert(service_ttl_.end(), ttl);
+		}
+		else
+		{
+			service_ttl *ttl = *addr.ttl_it_;
+			addr.update_time_ = time(NULL);
+			service_ttl_.erase(addr.ttl_it_);
+			addr.ttl_it_ = service_ttl_.insert(
+				service_ttl_.end(), ttl);
+		}
 	}
 	resp.result = "ok";
 	return true;
 }
 
-bool service_mgr::find_service(const nameserver_proto::find_service_req &req,
+bool service_mgr::find_service(
+	const nameserver_proto::find_service_req &req,
 	nameserver_proto::find_service_resp &resp)
 {
+	//格式是 /server/module/interface
+	acl::string name = req.service_name;
+	std::vector<acl::string> tokens;
+	if (!to_service_path(name, tokens))
+	{
+		resp.status = name += " service name error";
+		return true;
+	}
+
+	service_path path;
+	path.server_ = tokens[0];
+	path.module_ = tokens[1];
+	path.service_ = tokens[2];
+	path.path_ = name;
+
 	acl::lock_guard guard(locker_);
 
-	std::map<acl::string, std::map<acl::string,
-		service_info*>>::iterator
-		serv_it = services_.find(req.service_name);
+	module &module = services_[path.server_]
+		.modules_[path.module_];
 
-	if (serv_it == services_.end())
+	if (module.services_.empty())
 	{
 		resp.status = "not exist";
 		return true;
 	}
-	std::map<acl::string, service_info*>
-		&addr_infos = serv_it->second;
 
-	std::map<acl::string, service_info*>::iterator
-		it = addr_infos.begin();
-
-	for (; it != addr_infos.end(); ++it)
+	service &service_ = module.services_[path.module_];
+	if (service_.addrs_.empty())
 	{
-		resp.server_addrs.push_back(it->second->addr_);
+		resp.status = "not exist";
+		return true;
+	}
+	for (std::map<acl::string, addr_info>::iterator it
+		= service_.addrs_.begin();
+		it != service_.addrs_.end(); ++it)
+	{
+		resp.server_addrs.push_back(it->first);
 	}
 	resp.service_name = req.service_name;
 	resp.status = "ok";
 	return true;
 }
 
-bool service_mgr::find_services(const nameserver_proto::find_services_req &req,
+bool service_mgr::find_services(
+	const nameserver_proto::find_services_req &req,
 	nameserver_proto::find_services_resp &resp)
 {
-	acl::lock_guard guard(locker_);
+	if (req.service_names.empty())
+	{
+		resp.status = "service names empty error";
+		return true;
+	}
+
+	std::vector<service_path> service_paths;
 
 	for (size_t i = 0; i < req.service_names.size(); i++)
 	{
-		acl::string name = req.service_names[i];
+		acl::string path = req.service_names[i];
+		std::vector<acl::string> tokens;
+		if (!to_service_path(path, tokens))
+		{
+			resp.status = path += " service format error";
+			return true;
+		}
 
-		std::map<acl::string, std::map<acl::string, service_info*>>
-			::iterator serv_it = services_.find(name);
+		service_path _service_path;
+		_service_path.server_ = tokens[0];
+		_service_path.module_ = tokens[1];
+		_service_path.service_ = tokens[2];
+		_service_path.path_ = path;
+		service_paths.push_back(_service_path);
+	}
 
-		if (serv_it == services_.end())
+	//locker mutithread safe
+	acl::lock_guard guard(locker_);
+	for (size_t i = 0; i < service_paths.size(); i++)
+	{
+		service_path path = service_paths[i];
+		nameserver_proto::service_info &info =
+			resp.service_infos[path.path_];
+
+		info.service_name = path.path_;
+
+		module &module =
+			services_[path.server_].
+			modules_[path.module_];
+
+		service &service_ = module.services_[path.module_];
+		if (module.services_.empty() || service_.addrs_.empty())
 		{
 			continue;
 		}
+		for (std::map<acl::string, addr_info>::iterator
+			it = service_.addrs_.begin();
 
-		nameserver_proto::service_info &serv_info = resp.service_infos[name];
-		serv_info.service_name = name;
-
-		std::map<acl::string, service_info*> &addr_infos = serv_it->second;
-
-		std::map<acl::string, service_info*>::iterator it
-			= addr_infos.begin();
-
-		for (; it != addr_infos.end(); ++it)
+			it != service_.addrs_.end(); ++it)
 		{
-			serv_info.server_addrs.push_back(it->second->addr_);
+			info.server_addrs.insert(it->first);
 		}
 	}
+	resp.status = "ok";
 	return true;
 }
 
-bool service_mgr::del_service(const nameserver_proto::del_services_req &req,
+bool service_mgr::del_service(
+	const nameserver_proto::del_services_req &req,
 	nameserver_proto::del_services_resp &resp)
 {
-	acl::lock_guard guard(locker_);
+	if (req.service_names.empty())
+	{
+		resp.result = "service names empty error";
+		return true;
+	}
+
+	std::vector<service_path> service_paths;
+
 	for (size_t i = 0; i < req.service_names.size(); i++)
 	{
-		std::map<acl::string, std::map<acl::string, service_info*>>
-			::iterator serv_it = services_.find(req.service_names[i]);
+		acl::string path = req.service_names[i];
+		std::vector<acl::string> tokens;
+		if (!to_service_path(path, tokens))
+		{
+			resp.result = path += " service format error";
+			return true;
+		}
 
-		if (serv_it == services_.end())
+		service_path _service_path;
+		_service_path.server_ = tokens[0];
+		_service_path.module_ = tokens[1];
+		_service_path.service_ = tokens[2];
+		_service_path.path_ = path;
+		service_paths.push_back(_service_path);
+	}
+
+	//locker mutithread safe
+	acl::lock_guard guard(locker_);
+	for (size_t i = 0; i < service_paths.size(); i++)
+	{
+		service_path path = service_paths[i];
+
+		module &module = 
+			services_[path.server_].
+			modules_[path.module_];
+		
+		service &service_ = 
+			module.
+			services_[path.module_];
+
+		if (module.services_.empty() || service_.addrs_.empty())
+		{
 			continue;
-
-		std::map<acl::string, service_info*> addrs = serv_it->second;
-
-		std::map<acl::string, service_info*>::iterator addr_it =
-			addrs.find(req.server_addr);
-
-		if (addr_it == addrs.end())
-			continue;
-		service_ttl_.erase(addr_it->second->ttl_it_);
-		delete addr_it->second;
-		addrs.erase(addr_it);
+		}
+		std::map<acl::string, addr_info>::iterator it =
+			service_.addrs_.find(req.server_addr);
+		if (it != service_.addrs_.end())
+		{
+			service_ttl_.erase(it->second.ttl_it_);
+			service_.addrs_.erase(it);
+		}
 	}
 	resp.result = "ok";
+	return true;
+}
+bool service_mgr::list_service(
+	const nameserver_proto::list_services_req &req,
+	nameserver_proto::list_services_resp &resp)
+{
+	if (req.path.empty() || req.path[0] != '/')
+	{
+		resp.status = "path error";
+		return true;
+	}
+	acl::string path = req.path;
+	std::vector<acl::string> tokens = path.split2("/");
+
+	acl::lock_guard guard(locker_);
+	//list all services
+	if (tokens.size() == 0)
+	{
+		for (std::map<acl::string, server_info>::iterator
+			si_it = services_.begin();
+			si_it != services_.end(); ++si_it)
+		{
+			server_info &sinfo = si_it->second;
+			for (std::map<acl::string, module>::iterator
+				mit = sinfo.modules_.begin();
+				mit != sinfo.modules_.end();
+				mit++)
+			{
+				module &module = mit->second;
+				for (std::map<acl::string, service>::iterator
+					sit = module.services_.begin();
+					sit != module.services_.end();
+					sit++)
+				{
+					service &serv = sit->second;
+
+					nameserver_proto::service_info info;
+					info.service_name = serv.service_path_;
+					for (std::map<acl::string, addr_info>::iterator
+						ait = serv.addrs_.begin();
+						ait != serv.addrs_.end();
+						ait++)
+					{
+						info.server_addrs.insert(ait->first);
+					}
+					if (info.server_addrs.size())
+						resp.services.push_back(info);
+				}
+			}
+
+		}
+	}
+	//list path start with "/{server}" services
+	else if (tokens.size() == 1)
+	{
+		std::map<acl::string, module> &modules =
+			services_[tokens[0]].modules_;
+
+		for (std::map<acl::string, module>::iterator
+			mit = modules.begin();
+			mit != modules.end();
+			mit++)
+		{
+			module &module = mit->second;
+			for (std::map<acl::string, service>::iterator
+				sit = module.services_.begin();
+				sit != module.services_.end();
+				sit++)
+			{
+				service &serv = sit->second;
+
+				nameserver_proto::service_info info;
+				info.service_name = serv.service_path_;
+				for (std::map<acl::string, addr_info>::iterator
+					ait = serv.addrs_.begin();
+					ait != serv.addrs_.end();
+					ait++)
+				{
+					info.server_addrs.insert(ait->first);
+				}
+				if (info.server_addrs.size())
+					resp.services.push_back(info);
+			}
+		}
+
+	}
+	//list path start with "/{server}/{module}" services
+	else if (tokens.size() == 2)
+	{
+		std::map<acl::string, service> & services = 
+			services_[tokens[0]].
+			modules_[tokens[1]].
+			services_;
+
+		for (std::map<acl::string, service>::iterator
+			sit = services.begin();
+			sit !=services.end();
+			sit++)
+		{
+			service &serv = sit->second;
+			nameserver_proto::service_info info;
+			info.service_name = serv.service_path_;
+			for (std::map<acl::string, addr_info>::iterator
+				ait = serv.addrs_.begin();
+				ait != serv.addrs_.end();
+				ait++)
+			{
+				info.server_addrs.insert(ait->first);
+			}
+			if (info.server_addrs.size())
+				resp.services.push_back(info);
+		}
+
+	}
+	else if (tokens.size() == 3)
+	{
+		service &serv =
+			services_[tokens[0]].
+			modules_[tokens[1]].
+			services_[tokens[2]];
+
+		services_[tokens[1]];
+
+		nameserver_proto::service_info info;
+		info.service_name = req.path;
+		for (std::map<acl::string, addr_info>::iterator
+			ait = serv.addrs_.begin();
+			ait != serv.addrs_.end();
+			ait++)
+		{
+			info.server_addrs.insert(ait->first);
+		}
+		if (info.server_addrs.size())
+			resp.services.push_back(info);
+	}
+
+	resp.status = "ok";
 	return true;
 }
 
 void service_mgr::init()
 {
+	using namespace acl::http_rpc_config;
 
 	acl_assert(server_.on_json(
-		"/nameservice/service_mgr/add",
-		this, &service_mgr::add));
+		var_cfg_add_service, 
+		this,
+		&service_mgr::add));
 
 	acl_assert(server_.on_json(
-		"/nameservice/service_mgr/find",
-		this, &service_mgr::find_service));
+		var_cfg_find_service, this,
+		&service_mgr::find_service));
 
 	acl_assert(server_.on_json(
-		"/nameservice/service_mgr/finds",
-		this, &service_mgr::find_services));
+		var_cfg_find_services, this,
+		&service_mgr::find_services));
 
 	acl_assert(server_.on_json(
-		"/nameservice/register/del_service",
-		this, &service_mgr::del_service));
+		var_cfg_del_service, this,
+		&service_mgr::del_service));
 }
 
 void service_mgr::check_timeout()
@@ -162,31 +440,19 @@ void service_mgr::check_timeout()
 		service_ttl *ttl = service_ttl_.front();
 		if (ttl->when_ < time(NULL))
 		{
-			std::map<acl::string,
-				std::map<acl::string, service_info*>>
-				::iterator serv_it =
-				services_.find(ttl->service_name_);
+			service_path path = ttl->service_path_;
+			service &service_ = 
+				services_[path.server_].
+				modules_[path.module_].
+				services_[path.service_];
 
-			std::map<acl::string, service_info*>
-				&service_infos = serv_it->second;
-
-			std::map<acl::string, service_info*>::iterator
-				it = service_infos.find(ttl->addr_);
-
-			acl_assert(it != service_infos.end());
-
-			service_info* info = it->second;
-			service_infos.erase(it);
-			if (service_infos.empty())
-			{
-				services_.erase(serv_it);
-			}
 			service_ttl_.pop_front();
-
-			delete info;
+			if (service_.addrs_.empty())
+				continue;
+			service_.addrs_.erase(path.service_);
 			delete ttl;
-			continue;
 		}
-		return;
+		else
+			return;
 	}
 }

@@ -354,11 +354,11 @@ namespace acl
         if(!status ||!($result = gson(*status, &$obj.status), $result.first))
             return std::make_pair(false, "required [nameserver_proto::find_service_resp.status] failed:{"+$result.second+"}");
      
-        if(!service_name ||!($result = gson(*service_name, &$obj.service_name), $result.first))
-            return std::make_pair(false, "required [nameserver_proto::find_service_resp.service_name] failed:{"+$result.second+"}");
+        if(service_name)
+            gson(*service_name, &$obj.service_name);
      
-        if(!server_addrs ||!server_addrs->get_obj()||!($result = gson(*server_addrs->get_obj(), &$obj.server_addrs), $result.first))
-            return std::make_pair(false, "required [nameserver_proto::find_service_resp.server_addrs] failed:{"+$result.second+"}");
+        if(server_addrs&& server_addrs->get_obj())
+             gson(*server_addrs->get_obj(), &$obj.server_addrs);
      
         return std::make_pair(true,"");
     }
@@ -443,6 +443,11 @@ namespace acl
     {
         acl::json_node &$node = $json.create_node();
 
+        if (check_nullptr($obj.status))
+            $node.add_null("status");
+        else
+            $node.add_text("status", acl::get_value($obj.status));
+
         if (check_nullptr($obj.service_infos))
             $node.add_null("service_infos");
         else
@@ -468,9 +473,13 @@ namespace acl
 
     std::pair<bool,std::string> gson(acl::json_node &$node, nameserver_proto::find_services_resp &$obj)
     {
+        acl::json_node *status = $node["status"];
         acl::json_node *service_infos = $node["service_infos"];
         std::pair<bool, std::string> $result;
 
+        if(!status ||!($result = gson(*status, &$obj.status), $result.first))
+            return std::make_pair(false, "required [nameserver_proto::find_services_resp.status] failed:{"+$result.second+"}");
+     
         if(!service_infos ||!service_infos->get_obj()||!($result = gson(*service_infos->get_obj(), &$obj.service_infos), $result.first))
             return std::make_pair(false, "required [nameserver_proto::find_services_resp.service_infos] failed:{"+$result.second+"}");
      
@@ -496,9 +505,71 @@ namespace acl
     }
 
 
+    acl::json_node& gson(acl::json &$json, const nameserver_proto::list_services_req &$obj)
+    {
+        acl::json_node &$node = $json.create_node();
+
+        if (check_nullptr($obj.path))
+            $node.add_null("path");
+        else
+            $node.add_text("path", acl::get_value($obj.path));
+
+
+        return $node;
+    }
+    
+    acl::json_node& gson(acl::json &$json, const nameserver_proto::list_services_req *$obj)
+    {
+        return gson ($json, *$obj);
+    }
+
+
+    acl::string gson(const nameserver_proto::list_services_req &$obj)
+    {
+        acl::json $json;
+        acl::json_node &$node = acl::gson ($json, $obj);
+        return $node.to_string ();
+    }
+
+
+    std::pair<bool,std::string> gson(acl::json_node &$node, nameserver_proto::list_services_req &$obj)
+    {
+        acl::json_node *path = $node["path"];
+        std::pair<bool, std::string> $result;
+
+        if(!path ||!($result = gson(*path, &$obj.path), $result.first))
+            return std::make_pair(false, "required [nameserver_proto::list_services_req.path] failed:{"+$result.second+"}");
+     
+        return std::make_pair(true,"");
+    }
+
+
+    std::pair<bool,std::string> gson(acl::json_node &$node, nameserver_proto::list_services_req *$obj)
+    {
+        return gson($node, *$obj);
+    }
+
+
+    std::pair<bool,std::string> gson(const acl::string &$str, nameserver_proto::list_services_req &$obj)
+    {
+        acl::json _json;
+        _json.update($str.c_str());
+        if (!_json.finish())
+        {
+            return std::make_pair(false, "json not finish error");
+        }
+        return gson(_json.get_root(), $obj);
+    }
+
+
     acl::json_node& gson(acl::json &$json, const nameserver_proto::list_services_resp &$obj)
     {
         acl::json_node &$node = $json.create_node();
+
+        if (check_nullptr($obj.status))
+            $node.add_null("status");
+        else
+            $node.add_text("status", acl::get_value($obj.status));
 
         if (check_nullptr($obj.services))
             $node.add_null("services");
@@ -525,11 +596,15 @@ namespace acl
 
     std::pair<bool,std::string> gson(acl::json_node &$node, nameserver_proto::list_services_resp &$obj)
     {
+        acl::json_node *status = $node["status"];
         acl::json_node *services = $node["services"];
         std::pair<bool, std::string> $result;
 
-        if(!services ||!services->get_obj()||!($result = gson(*services->get_obj(), &$obj.services), $result.first))
-            return std::make_pair(false, "required [nameserver_proto::list_services_resp.services] failed:{"+$result.second+"}");
+        if(!status ||!($result = gson(*status, &$obj.status), $result.first))
+            return std::make_pair(false, "required [nameserver_proto::list_services_resp.status] failed:{"+$result.second+"}");
+     
+        if(services&& services->get_obj())
+             gson(*services->get_obj(), &$obj.services);
      
         return std::make_pair(true,"");
     }

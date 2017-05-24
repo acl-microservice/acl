@@ -20,7 +20,7 @@ static void init_config()
 	};
 
 	//最后一行必须是NULL,NULL,NULL 表示结束
-	var_conf_str_tab = new acl::master_str_tbl[12]{
+	var_conf_str_tab = new acl::master_str_tbl[11]{
 		{ "var_cfg_allow_clients","all",&var_cfg_allow_clients },
 		{ "var_cfg_redis_addr", "", &var_cfg_redis_addr },
 		{ "var_cfg_memcache_addr", "", &var_cfg_memcache_addr },
@@ -29,8 +29,7 @@ static void init_config()
 		{ "var_cfg_add_service", "/nameservice/service_mgr/add",&var_cfg_add_service },
 		{ "var_cfg_del_service", "/nameservice/service_mgr/del",&var_cfg_del_service },
 		{ "var_cfg_server_addr", "",&var_cfg_server_addr },
-		{ "var_cfg_nameserver_name", "nameserver",&var_cfg_nameserver },
-		{ "var_cfg_server_name", "", &var_cfg_server_name },
+		{ "var_cfg_server_name", "nameserver", &var_cfg_server_name },
 		{ "var_cfg_nameserver", "nameserver", &var_cfg_nameserver },
 		{ NULL, NULL, NULL }
 	};
