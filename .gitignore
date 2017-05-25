@@ -19,6 +19,9 @@
 *.la
 *.lib
 *.a
+*.log
+*.vcxproj.user
+
 x64/
 acl_cpp_vc2015.VC.VC.opendb
 acl_cpp_vc2015.VC.db

@@ -115,7 +115,7 @@
     <ClInclude Include="include\http_rpc.h" />
     <ClInclude Include="include\http_rpc_client.h" />
     <ClInclude Include="include\http_rpc_config.h" />
-    <ClInclude Include="include\json_msg_handlers.hpp" />
+    <ClInclude Include="include\json_service_handles.hpp" />
     <ClInclude Include="include\nameserver_proto.h" />
     <ClInclude Include="include\http_rpc_server.h" />
     <ClInclude Include="include\nameserver_proto_gson.h" />

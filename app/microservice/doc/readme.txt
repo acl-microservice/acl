@@ -11,6 +11,35 @@ authservice 认证服务
 msgservice 消息推送服务
 monitorservice 服务监控
 
+
+                                  |------------>logic_sever----|
+                                  |------------>logic_sever----|
+PC-------------->|                |------------>logic_sever----|
+                 |->gateserver *N |------------>logic_sever----|
+android/ios----->|       |        |------------>logic_sever----|
+                         |        |------------>logic_sever----|
+                         |                                     | 
+						 |--------------|----------|-------------
+						                |          |
+                                    nameserver     |
+									           logservice
+
+
+问：客户端如何访问这些服务？
+答：客户端通过gateservice 服务访问 后端的服务
+
+问：服务之间如何通信？
+答：服务之间通过http 通讯
+
+问：这么多服务，怎么找?
+答：通过nameserver 定位服务
+
+问：服务挂了怎么办？ 
+答：当部署集群的时候，框架会尝试访问其他的服务器，
+    直到有一个可以正常访问，或者都失败。
+
+
+
 nameservice api:
 	
 	注册服务
