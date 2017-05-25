@@ -19,12 +19,12 @@ namespace acl
 		return resp_;
 	}
 
-	func_handler * http_rpc_servlet::get_handle(
+	service_handle * http_rpc_servlet::get_handle(
 		const string &message_type, const string &func_name)
 	{
 		if (message_type == "application/json")
 		{
-			return json_msg_handlers::get_instance()
+			return json_service_handles::get_instance()
 				.get_handle(func_name);
 		}
 		logger_error("not message type :%s", message_type.c_str());
@@ -37,17 +37,40 @@ namespace acl
 		return doPost(req, resp);
 	}
 
+	acl_pthread_key_t req_key;
+	static void once_init(void)
+	{
+		acl_pthread_key_create(&req_key, NULL);
+	}
+
+	static acl_pthread_once_t once_control = ACL_PTHREAD_ONCE_INIT;
+	
 	bool http_rpc_servlet::doPost(HttpServletRequest& req, 
 		HttpServletResponse& resp)
 	{
-		func_handler *handle = get_handle(
-			req.getContentType(), 
+		service_handle *handle = get_handle(
+			req.getContentType(false), 
 			req.getPathInfo());
 
 		if (!handle)
 		{
-			logger_error("can't find message handle for path: %s", 
-				req.getPathInfo());
+			logger_error("can't find message "
+				"handle for path: %s", req.getPathInfo());
+
+			acl::string buf("can't find message "
+				"handle for path:");
+
+			buf += req.getPathInfo();
+
+			resp.setStatus(404);
+			resp.setContentType("text/html; charset=utf-8");
+			resp.setContentLength(buf.size());
+			resp.setKeepAlive(false);
+			// 发送 http 响应头
+			if (resp.sendHeader() == false)
+				return false;
+			// 发送 http 响应体
+			(void)resp.getOutputStream().write(buf);
 			return false;
 		}
 
@@ -56,12 +79,17 @@ namespace acl
 
 		if(read_http_body(req, body) == false)
 			return false;
+		
+		//create acl_pthread_key_create
+		acl_pthread_once(&once_control, once_init);
+		acl_pthread_setspecific(req_key, &req);
 
-		acl_pthread_tls_set(acl_pthread_self(), &req, NULL);
 		bool ret = handle->invoke(body, buffer);
 
-		//写超时 或是网络错误
-		if (!resp.write(buffer))
+		resp.setStatus(200)
+			.setKeepAlive(req.isKeepAlive())
+			.setContentLength(buffer.length());
+		if(!resp.write(buffer) || !req.isKeepAlive())
 			return false;
 		return ret;
 	}

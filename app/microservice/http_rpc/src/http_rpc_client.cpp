@@ -221,11 +221,10 @@ namespace acl
 
 	void http_rpc_client::update_services_addr()
 	{
-
-		std::map<string, http_rpc_service_info*> old_service_addrs;
+		//req 
 		nameserver_proto::find_services_req req;
-		std::vector<connect_pool* >pools;
 
+		//pack requst data
 		do
 		{
 			//lock
@@ -239,15 +238,15 @@ namespace acl
 
 			for (; it != service_addrs_.end(); ++it)
 			{
-				//copy
-				old_service_addrs[it->first] =
-					new http_rpc_service_info(*it->second);
-
-				req.service_names.push_back(it->first);
+				req.service_paths.push_back(it->first);
 			}
-
 		} while (false);
 
+		if (req.service_paths.empty())
+			return;
+		
+		//find connect pool for http_requst
+		std::vector<connect_pool* >pools;
 
 		if (!find_connect_pool(
 			http_rpc_config::var_cfg_find_services,
@@ -283,133 +282,84 @@ namespace acl
 			return;
 		}
 			
-
+		//resp json --> resp obj
 		std::pair<bool, std::string> ret = gson(buffer, resp);
 		if (!ret.first)
 		{
 			logger_error("gson error:%s", buffer);
 			return;
 		}
-
+		if (resp.status != "ok")
+		{
+			logger_error("resp status error: %s", resp.status.c_str());
+			return;
+		}
 		//process resp
 		//todo 优化
 		lock_guard guard(service_addrs_locker_);
 
-		std::map<string, http_rpc_service_info*>::iterator 
-			oit = old_service_addrs.begin();
-
-		for (; oit != old_service_addrs.end(); ++oit)
+		for (size_t i = 0; i < req.service_paths.size(); i++)
 		{
-			std::map<acl::string, 
-				nameserver_proto::service_info>::iterator sit 
-				= resp.service_infos.find(oit->first);
+			nameserver_proto::service_info &service_info = 
+				resp.service_infos[req.service_paths[i]];
 
-			if (sit == resp.service_infos.end())
+			http_rpc_service_info* _my_service_info 
+				= service_addrs_[req.service_paths[i]];
+			
+			acl_assert(_my_service_info);
+			std::vector<string> &addrs = _my_service_info->addrs_;
+			// delete dead service addrs
+			for (std::vector<string>::iterator it = addrs.begin(); 
+				it !=  addrs.end(); )
 			{
-				//删除已经下线的服务
-				std::map<string, http_rpc_service_info*>::iterator
-					it = service_addrs_.begin();
-
-				if (it != service_addrs_.end())
-				{
-					http_rpc_service_info* info = it->second;
-					for (size_t i = 0; i < info->addrs_.size(); i++)
-					{
-						conn_manager_->remove(info->addrs_[i]);
-					}
-					delete info;
-					service_addrs_.erase(it);
-				}
-				continue;
-			}
-			//更新service addrs
-			http_rpc_service_info* info = service_addrs_[sit->first];
-			http_rpc_service_info* oinfo = oit->second;
-			acl_assert(info);
-
-			//new addr
-			for (size_t i = 0; i < oinfo->addrs_.size(); i++)
-			{
-				bool find = false;
-				for (size_t j = 0; j < info->addrs_.size(); j++)
-				{
-					if (oinfo->addrs_[i] == info->addrs_[j])
-					{
-						find = true;
-						break;
-					}
-				}
-				if (find == false)
-				{
-					info->addrs_.push_back(oinfo->addrs_[i]);
-					conn_manager_->set(oinfo->addrs_[i].c_str(), 0);
-				}
-			}
-
-			//dead addr
-			for (std::vector<string>::iterator it 
-				= info->addrs_.begin();
-
-				it != info->addrs_.end(); it++)
-			{
-				bool find = false;
-				for (size_t i = 0; i < oinfo->addrs_.size(); i++)
-				{
-					if (oinfo->addrs_[i] == *it)
-					{
-						find = true;
-						break;
-					}
-				}
-				if (find == false)
+				if (service_info.server_addrs.find(*it)
+					== service_info.server_addrs.end())
 				{
 					conn_manager_->remove(*it);
-					info->addrs_.erase(it);
+					it = addrs.erase(it);
+				}
+				else
+					it++;
+
+			}
+
+			//add new addr for service
+			for (std::set<string>::iterator 
+				it = service_info.server_addrs.begin(); 
+				it != service_info.server_addrs.end(); 
+				it++)
+			{
+				bool find = false;
+				for (size_t i = 0; i < addrs.size(); i++)
+				{
+					if (addrs[i] == *it)
+					{
+						find = true;
+						break;
+					}
+				}
+				if (!find && it->size())
+				{
+					addrs.push_back(*it);
+					conn_manager_->set(it->c_str(), 0);
 				}
 			}
+		}
+	}
+
+	void http_rpc_client::add_service_addr( 
+		const string &addr,
+		const std::vector<string> &service_paths)
+	{
+		for (size_t i = 0; i < service_paths.size(); i++)
+		{
+			add_service_addr(addr, service_paths[i]);
 		}
 	}
 
 	void http_rpc_client::add_service_addr(
-		const string &service_name,
-		const std::vector<string> &addrs)
-	{
-
-		lock_guard guard(service_addrs_locker_);
-
-		http_rpc_service_info * service_addr = NULL;
-
-		std::map<string, http_rpc_service_info*>::iterator itr =
-			service_addrs_.find(service_name);
-
-		if (itr == service_addrs_.end())
-		{
-			service_addr = new http_rpc_service_info;
-			service_addr->addrs_ = addrs;
-			service_addr->index_ = 0;
-			service_addr->service_name_ = service_name;
-			service_addrs_[service_name] = service_addr;
-
-			return;
-		}
-		service_addr = itr->second;
-
-		for (size_t i = 0; i < addrs.size(); i++)
-		{
-			for (size_t j = 0; j < service_addr->addrs_.size(); j++)
-			{
-				if (service_addr->addrs_[j] == addrs[j])
-				{
-					continue;
-				}
-			}
-			service_addr->addrs_.push_back(addrs[i]);
-		}
-		return;
-	}
-
-	void http_rpc_client::add_service_addr(const string &service_name,
-		const string &addr)
+		const string &addr,
+		const string &service_name)
 	{
 		lock_guard guard(service_addrs_locker_);
 
@@ -424,6 +374,7 @@ namespace acl
 			service_addr->index_ = 0;
 			service_addr->service_name_ = service_name;
 			service_addrs_[service_name] = service_addr;
+			conn_manager_->set(addr, 0);
 			return;
 		}
 		service_addr = itr->second;
@@ -435,8 +386,8 @@ namespace acl
 				return;
 			}
 		}
+		conn_manager_->set(addr, 0);
 		service_addr->addrs_.push_back(addr);
-		return;
 	}
 
 

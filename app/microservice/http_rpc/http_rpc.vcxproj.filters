@@ -27,34 +27,34 @@
     <ClInclude Include="include\http_rpc_client.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\nameserver_proto.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\nameserver_proto.gson.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\service_register.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\msg_handlers.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\json_msg_handlers.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\rpc_context.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\http_rpc_server.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\func_handler.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\json_msg_handler.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\http_rpc_config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json_service_handle.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\service_handle.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\service_handles.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\service_base.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\nameserver_proto.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\nameserver_proto_gson.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -71,25 +71,22 @@
     <ClCompile Include="src\http_rpc_client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\nameserver_proto.gson.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\msg_handlers.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\service_register.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\func_handle.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rpc_context.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\http_rpc_server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\http_rpc_config.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service_base.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nameserver_proto_gson.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,5 +1,4 @@
 #include "http_rpc.h"
-#include "nameserver_proto.h"
 
 namespace acl
 {
@@ -18,37 +17,42 @@ namespace acl
 
 	void* service_register::run()
 	{
+		int inter = 
+			http_rpc_config::var_cfg_regist_service_inter;
+
 		do
 		{
 			timeval start, end;
 			gettimeofday(&start, NULL);
 			locker_.lock();
-			for (std::map<string, std::set<string>>::iterator itr =
-				services.begin(); itr != services.end(); ++itr)
+			for (std::map<string, std::set<string>>::iterator 
+				it =services.begin(); 
+				it != services.end(); 
+				++it)
 			{
 				std::vector<string> services;
-				for (std::set<string>::iterator set_itr =
-					itr->second.begin();
-					set_itr != itr->second.end(); set_itr++)
+				for (std::set<string>::iterator 
+					set_it =it->second.begin();
+					set_it != it->second.end(); 
+					set_it++)
 				{
-					services.push_back(*set_itr);
+					services.push_back(*set_it);
 				}
 				if (services.size())
-					rpc_regist_service(itr->first, services);
+					rpc_regist_service(it->first, services);
 			}
 			locker_.unlock();
 			gettimeofday(&end, NULL);
 
-			long mills = (end.tv_sec - start.tv_sec) * 1000;
-			mills += (end.tv_usec - start.tv_usec) / 1000;
+			long millis = (end.tv_sec - start.tv_sec) * 1000;
+			millis += (end.tv_usec - start.tv_usec) / 1000;
 
-			mills = http_rpc_config::var_cfg_regist_service_inter * 1000 - mills;
+			millis = inter * 1000 - millis;
 
-			if (mills <= 0)
-				mills = 1;
+			if (millis <= 0)
+				millis = 1;
 
-			acl_doze(mills);
-
+			acl_doze(millis);
 
 		} while (!is_stop_);
 
@@ -56,14 +60,14 @@ namespace acl
 	}
 
 	
-	void service_register::rpc_regist_service(const string &addr_, 
-		const std::vector<string>& service_names)
+	void service_register::rpc_regist_service(const string &addr, 
+		const std::vector<string>& service_paths)
 	{
 		nameserver_proto::add_services_req req;
 		nameserver_proto::add_services_resp resp;
 
-		req.server_addr = addr_;
-		req.service_names = service_names;
+		req.server_addr = addr;
+		req.service_paths = service_paths;
 
 		http_rpc_client::status_t status =
 			http_rpc_client::get_instance().
@@ -78,13 +82,13 @@ namespace acl
 	}
 
 	bool service_register::del(const string &addr_,
-		const string& service_name)
+		const string& service_path)
 	{
 		nameserver_proto::del_services_req req;
 		nameserver_proto::del_services_resp resp;
 
 		req.server_addr = addr_;
-		req.service_names.push_back(service_name);
+		req.service_paths.push_back(service_path);
 
 		http_rpc_client::status_t status =
 			http_rpc_client::get_instance().
@@ -96,18 +100,18 @@ namespace acl
 		}
 		//del service from register timer'
 		lock_guard guard(locker_);
-		services[addr_].erase(service_name);
+		services[addr_].erase(service_path);
 		return !!status;
 	}
 
 	bool service_register::regist(const string &addr_,
-		const string& service_name)
+		const string& service_path)
 	{
 		nameserver_proto::add_services_req req;
 		nameserver_proto::add_services_resp resp;
 
 		req.server_addr = addr_;
-		req.service_names.push_back(service_name);
+		req.service_paths.push_back(service_path);
 
 		http_rpc_client::status_t status =
 			http_rpc_client::get_instance().
@@ -119,7 +123,7 @@ namespace acl
 		}
 		//add service to regist timer
 		lock_guard guard(locker_);
-		services[addr_].insert(service_name);
+		services[addr_].insert(service_path);
 		return !!status;
 	}
 

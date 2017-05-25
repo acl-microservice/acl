@@ -1,6 +1,7 @@
 #pragma once
 #include "http_rpc.h"
-class service_mgr : public acl::rpc_context
+class service_mgr : public acl::service_base,
+	public acl::thread
 {
 private:
 	//service: addrs
@@ -8,7 +9,7 @@ private:
 
 	struct service_path
 	{
-		acl::string path_;
+		acl::string service_path_;
 		acl::string service_;
 		acl::string module_;
 		acl::string server_;
@@ -63,6 +64,8 @@ public:
 
 	~service_mgr();
 
+private:
+	//services
 	bool add(const nameserver_proto::add_services_req &req,
 		nameserver_proto::add_services_resp &resp);
 
@@ -75,13 +78,14 @@ public:
 	bool del_service(const nameserver_proto::del_services_req &req,
 		nameserver_proto::del_services_resp &resp);
 
-	bool list_service(const nameserver_proto::list_services_req &req,
+	bool list_services(const nameserver_proto::list_services_req &req,
 		nameserver_proto::list_services_resp &resp);
 
 	void init();
 
 	void check_timeout();
-private:
+
+	virtual void *run();
 
 	acl::locker locker_;
 	int timeout_;

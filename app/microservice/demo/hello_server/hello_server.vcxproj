@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{64704366-A4A9-49F6-8DD5-BFBF95350E4C}</ProjectGuid>
-    <RootNamespace>nameserver</RootNamespace>
+    <ProjectGuid>{67F8B6B2-453B-4C62-A762-1DD9A4602D40}</ProjectGuid>
+    <RootNamespace>hello_server</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -63,7 +63,7 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\microservice.props" />
+    <Import Project="..\..\microservice.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -111,15 +111,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\hello_proto_gson.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\service_mgr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\nameserver.h" />
-    <ClInclude Include="include\service_mgr.h" />
+    <ClInclude Include="include\hello_proto.h" />
+    <ClInclude Include="include\hello_proto_gson.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\http_rpc\http_rpc.vcxproj">
+    <ProjectReference Include="..\..\http_rpc\http_rpc.vcxproj">
       <Project>{1b74f55d-830c-4665-8b35-b2c0a04229d4}</Project>
     </ProjectReference>
   </ItemGroup>

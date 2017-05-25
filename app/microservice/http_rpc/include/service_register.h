@@ -14,24 +14,28 @@ namespace acl
 	{
 	public:
 		static service_register& get_instance();
-		
+
+		~service_register() 
+		{
+
+		}
 		/*
 		 * 注册服务到nameserver上去
-		 * @param addr_ {const string &}本服务器地址
-		 * @param service_name {const string &}服务名称,
+		 * @param addr {const string &}本服务器地址
+		 * @param service_path {const string &}服务名称,
 		 * 命名规则为/{server}/{module}/{interface}
 		 * @return bool, true 注册成功，false 失败
 		 */
-		bool regist(const string &addr_, const string& service_name);
+		bool regist(const string &addr, const string& service_path);
 
 		/*
 		 * 取消注册服务
-		 * @param addr_ {const string &}本服务器地址
+		 * @param addr {const string &}本服务器地址
 		 * @param service_name {const string &}服务名称,
 		 * 命名规则为/{server}/{module}/{interface}
 		 * @return bool, true 注册成功，false 失败
 		 */
-		bool del(const string &addr_, const string& service_name);
+		bool del(const string &addr, const string& service_path);
 
 		/*
 		 * 停止注册服务心跳
@@ -42,7 +46,7 @@ namespace acl
 		service_register(const service_register&);
 		service_register &operator= (const service_register&);
 
-		void rpc_regist_service(const string &addr_, 
+		void rpc_regist_service(const string &addr, 
 			const std::vector<string>& service_names);
 
 		virtual void* run();
@@ -50,7 +54,7 @@ namespace acl
 		bool is_stop_;
 
 		locker locker_;
-		//addr:service
+		//addr:service_path
 		std::map<string, std::set<string>> services;
 	};
 }

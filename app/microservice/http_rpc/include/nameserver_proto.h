@@ -6,7 +6,7 @@ namespace nameserver_proto
 {
 	struct service_info
 	{
-		acl::string service_name;
+		acl::string service_path;
 		//Gson@optional
 		std::set<acl::string> server_addrs;
 	};
@@ -14,7 +14,7 @@ namespace nameserver_proto
 	/*
 	json:
 	{
-		"service_names":[
+		"service_paths":[
 			"/server_name/module/service1",
 			"/server_name/module/service2"
 		],
@@ -26,7 +26,7 @@ namespace nameserver_proto
 	*/
 	struct  add_services_req
 	{
-		std::vector<acl::string> service_names;
+		std::vector<acl::string> service_paths;
 		acl::string server_addr;
 	};
 
@@ -39,7 +39,7 @@ namespace nameserver_proto
 	/*
 	json:
 	{
-		"service_names":[
+		"service_paths":[
 			"/server_name/module/service1",
 			"/server_name/module/service2"
 		],
@@ -52,7 +52,7 @@ namespace nameserver_proto
 	*/
 	struct del_services_req
 	{
-		std::vector<acl::string> service_names;
+		std::vector<acl::string> service_paths;
 		acl::string server_addr;
 	};
 
@@ -65,7 +65,7 @@ namespace nameserver_proto
 	/*
 	json:
 	{
-		"service_name":"/server_name/module/service"
+		"service_path":"/server_name/module/service"
 	}
 	
 	{
@@ -76,21 +76,19 @@ namespace nameserver_proto
 
 	struct find_service_req
 	{
-		acl::string service_name;
+		acl::string service_path;
 	};
 
 	struct find_service_resp
 	{
 		acl::string status;
 		//Gson@optional
-		acl::string service_name;
-		//Gson@optional
 		std::vector<acl::string> server_addrs;
 	};
 	/*
 	json:
 	{
-		"service_names":["b","a"]
+		"service_paths":["b","a"]
 	}
 
 	{
@@ -104,7 +102,7 @@ namespace nameserver_proto
 	*/
 	struct find_services_req
 	{
-		std::vector<acl::string> service_names;
+		std::vector<acl::string> service_paths;
 	};
 
 	struct find_services_resp
@@ -119,7 +117,7 @@ namespace nameserver_proto
 	{
 		"services":[
 			{
-				"service_name":/server_name/module/service",
+				"service_path":/server_name/module/service",
 				"server_addrs":["127.0.0.1:10038","127.0.0.1:10039"]
 			}
 		]
@@ -136,7 +134,7 @@ namespace nameserver_proto
 
 	struct list_services_req
 	{
-		acl::string path;
+		acl::string service_path;
 	};
 	
 	struct list_services_resp

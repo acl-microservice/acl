@@ -37,7 +37,7 @@ namespace acl
 		bool read_http_body(HttpServletRequest &req, string &body);
 
 
-		func_handler *get_handle(const string &message_type, 
+		service_handle *get_handle(const string &message_type, 
 			const string &func_name);
 
 		HttpServletRequest *req_;

@@ -2,16 +2,15 @@
 namespace acl
 {
 	template<class Context, class ReqType, class RespType>
-	class json_msg_handler: public func_handler
+	class json_service_handle: public service_handle
 	{
 	public:
 		typedef bool (Context::*func_t)(const ReqType &, RespType&);
 
-		json_msg_handler(const string &func_name, Context *ctx, func_t fun)
+		json_service_handle(Context *ctx, func_t fun)
 			:context_(ctx),
 			function_(fun)
 		{
-			func_name_ = func_name;
 		}
 
 		virtual bool invoke(const string &data, string &buffer)
