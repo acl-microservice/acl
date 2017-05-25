@@ -32,7 +32,7 @@ acl::master_str_tbl acl::http_rpc_config::var_conf_str_tab[] = {
 	{ "var_cfg_nameserver_addr", "127.0.0.1:10080",               &var_cfg_nameserver_addr },
 	{ "var_cfg_allow_clients",   "all",                           &var_cfg_allow_clients },
 	{ "var_cfg_redis_addr",	     "",                              &var_cfg_redis_addr },
-	{ "var_cfg_memcache_addr",   "",                              &var_cfg_memcache_addr },
+	{ "var_cfg_memcache_addr",   "127.0.0.1:11211",               &var_cfg_memcache_addr },
 	{ "var_cfg_server_addr",     "127.0.0.1:10081",               &var_cfg_server_addr },
 	{ "var_cfg_server_name",     "hello_server",                  &var_cfg_server_name },
 	{ NULL,                      NULL,                            NULL }
