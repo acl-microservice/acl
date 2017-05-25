@@ -31,9 +31,11 @@ namespace acl
 		/*
 		* 添加服务地址	
 		*/
-		void add_service_addr(const string &addr,const string &service_path);
+		void add_service_addr(const string &addr,
+			const string &service_path);
 
-		void add_service_addr(const string &addr, const std::vector<string> &service_path);
+		void add_service_addr(const string &addr, 
+			const std::vector<string> &service_path);
 
 		/*
 		*rpc远程调用

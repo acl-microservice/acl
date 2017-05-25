@@ -22,7 +22,9 @@ namespace acl
 				return false;
 			}
 			message_handles_.insert(std::make_pair(service_path,
-				new json_service_handle<Context, ReqType, RespType>(ctx, func)));
+				new json_service_handle<
+				Context, ReqType, RespType>(ctx, func)));
+
 			return true;
 		}
 	private:
