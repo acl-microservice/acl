@@ -6,7 +6,7 @@
 acl::gsoner gr;
 static void create_files(const std::vector<std::string>& files)
 {
-	gr.read_multi_file(files);
+	gr.read_file(files);
 	gr.parse_code();
 	gr.gen_gson();
 }

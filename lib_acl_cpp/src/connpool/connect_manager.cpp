@@ -201,7 +201,7 @@ void connect_manager::remove(const char* addr)
 		{
 			(*it)->set_delay_destroy();
 			pools_.erase(it);
-			break;
+			return;
 		}
 	}
 	if (it == pools_.end())

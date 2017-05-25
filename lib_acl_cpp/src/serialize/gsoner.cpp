@@ -1478,8 +1478,8 @@ namespace acl
 		{
 			std::string filename = get_filename(files_.front().c_str());
 			filename = filename.substr(0, filename.find_last_of('.'));
-			gen_header_filename_ = filename + ".gson.h";
-			gen_source_filename_ = filename + ".gson.cpp";
+			gen_header_filename_ = filename + "_gson.h";
+			gen_source_filename_ = filename + "_gson.cpp";
 		}
 
 		std::cout << "write header file:" << gen_header_filename_ << std::endl;
