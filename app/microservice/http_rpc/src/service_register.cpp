@@ -19,6 +19,9 @@ namespace acl
 	{
 		int inter = 
 			http_rpc_config::var_cfg_regist_service_inter;
+		
+		//wait for server init
+		acl_doze(1000);
 
 		do
 		{
@@ -81,7 +84,7 @@ namespace acl
 		}
 	}
 
-	bool service_register::del(const string &addr_,
+	void service_register::del(const string &addr_,
 		const string& service_path)
 	{
 		nameserver_proto::del_services_req req;
@@ -98,33 +101,19 @@ namespace acl
 		{
 			logger_error("json_call failed:%s", status.error_str_.c_str());
 		}
-		//del service from register timer'
+		//del from service success 
+		//service from register timer
+		//when lost heartheat.nameserver will delete timeout service
+
 		lock_guard guard(locker_);
 		services[addr_].erase(service_path);
-		return !!status;
 	}
 
-	bool service_register::regist(const string &addr_,
+	void service_register::regist(const string &addr_,
 		const string& service_path)
 	{
-		nameserver_proto::add_services_req req;
-		nameserver_proto::add_services_resp resp;
-
-		req.server_addr = addr_;
-		req.service_paths.push_back(service_path);
-
-		http_rpc_client::status_t status =
-			http_rpc_client::get_instance().
-			json_call(http_rpc_config::var_cfg_add_service,
-				req, resp);
-		if (status)
-		{
-			logger_error("json_call failed:%s", status.error_str_.c_str());
-		}
-		//add service to regist timer
 		lock_guard guard(locker_);
 		services[addr_].insert(service_path);
-		return !!status;
 	}
 
 	void service_register::stop()

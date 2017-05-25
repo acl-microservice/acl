@@ -83,6 +83,12 @@ namespace acl
 		//建议是 3秒钟
 		extern int var_cfg_update_service_inter;
 
+		//true 本地的service 地址 缓存会和nameserver上面的 同步删除
+		//也就是说，如果nameserver 上面删除了某个的service的地址 本地就很删除
+		//false 本地的service 地址 只会同步 nameserver 新添加的地址
+		//不会删除 nameserver 不存在的地址
+		//默认是 true
+		extern int var_cfg_sync_del_service_addr;
 
 		//默认配置
 		//用户需要copy 这个初始化的代码，添加修改成自己需要的配置
@@ -132,8 +138,8 @@ namespace acl
 
 		//最后一行必须是0,0,0表示结束
 		acl::master_bool_tbl acl::http_rpc_config::var_conf_bool_tab [] = {
-
-			{ 0, 0 , 0 }
+			{"var_cfg_sync_del_service_addr", true,   &var_cfg_sync_del_service_addr}
+			{ NULL                          , false , NULL }
 		};
 		*/
 	}

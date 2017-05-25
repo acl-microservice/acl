@@ -10,8 +10,8 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(solutionDir)lib_acl;$(solutionDir)lib_acl_cpp;$(solutionDir)lib_protocol;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lib_acl_vc2015d.lib;lib_acl_cpp_vc2015d.lib;lib_protocol_vc2015d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(solutionDir)lib_acl;$(solutionDir)lib_acl_cpp;$(solutionDir)lib_protocol;$(solutionDir)x64\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lib_acl_vc2015d.lib;lib_acl_cpp_vc2015d.lib;lib_protocol_vc2015d.lib;http_rpc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

@@ -111,6 +111,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\config.cpp" />
     <ClCompile Include="src\hello_proto_gson.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>

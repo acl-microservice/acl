@@ -21,6 +21,9 @@
     <ClCompile Include="src\hello_proto_gson.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\config.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\hello_proto_gson.h">

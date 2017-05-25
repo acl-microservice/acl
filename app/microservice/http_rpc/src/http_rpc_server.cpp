@@ -47,6 +47,7 @@ namespace acl
 			http_rpc_client::get_instance().add_service_addr(addr, services);
 		}
 		//nameserver 也需要给自己发送心跳
+		http_rpc_client::get_instance().start();
 		service_register::get_instance().start();
 
 		//init child
@@ -114,9 +115,7 @@ namespace acl
 			logger_fatal("servlet null!");
 
 		session *sess = create_session();
-		servlet->doRun(*sess, stream);
-
-		return true;
+		return servlet->doRun(*sess, stream);
 	}
 
 

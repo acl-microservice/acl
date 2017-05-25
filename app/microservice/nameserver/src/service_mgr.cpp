@@ -1,6 +1,8 @@
 #include "http_rpc.h"
 #include "service_mgr.h"
 
+extern int var_cfg_service_addr_timeout;
+
 service_mgr::service_mgr(acl::http_rpc_server &server)
 	:acl::service_base(server)
 {
@@ -75,11 +77,17 @@ bool service_mgr::add(
 			module.module_name_ = path.module_;
 		if (service_.name_.empty())
 			service_.name_ = path.service_;
+		service_.service_path_ = path.service_path_;
+
+		timeval now;
+		gettimeofday(&now, NULL);
+		long long when = now.tv_sec * 1000 +
+			now.tv_usec / 1000 +
+			var_cfg_service_addr_timeout * 1000;
 
 		if (addr.regist_time_ == 0)
 		{
-			timeval now;
-			gettimeofday(&now, NULL);
+			
 			addr.regist_time_ = time(NULL);
 			addr.update_time_ = time(NULL);
 			addr.addr_ = req.server_addr;
@@ -88,19 +96,21 @@ bool service_mgr::add(
 			ttl->addr_ = req.server_addr;
 			ttl->service_path_ = path;
 			//milliseconds
-			ttl->when_ = now.tv_sec * 1000 + 
-				now.tv_usec / 1000;
+			ttl->when_ = when;
 
 			addr.ttl_it_ = service_ttl_.
 				insert(service_ttl_.end(), ttl);
 		}
 		else
 		{
-			service_ttl *ttl = *addr.ttl_it_;
-			addr.update_time_ = time(NULL);
+			service_ttl *ttl = *(addr.ttl_it_);
+			acl_assert(ttl);
+
 			service_ttl_.erase(addr.ttl_it_);
-			addr.ttl_it_ = service_ttl_.insert(
-				service_ttl_.end(), ttl);
+
+			ttl->when_ = when;
+			addr.update_time_ = time(NULL);
+			addr.ttl_it_ = service_ttl_.insert(service_ttl_.end(), ttl);
 		}
 	}
 	resp.result = "ok";
@@ -317,7 +327,10 @@ bool service_mgr::list_services(
 						info.server_addrs.insert(ait->first);
 					}
 					if (info.server_addrs.size())
+					{
 						resp.services.push_back(info);
+					}
+						
 				}
 			}
 		}
@@ -446,6 +459,9 @@ void service_mgr::init()
 	req.service_paths.push_back(var_cfg_list_services);
 
 	add(req,resp);
+
+	//checkout timeout thread
+	start();
 }
 
 void *service_mgr::run()
@@ -465,7 +481,12 @@ void service_mgr::check_timeout()
 	while (service_ttl_.size())
 	{
 		service_ttl *ttl = service_ttl_.front();
-		if (ttl->when_ < time(NULL))
+		
+		timeval now;
+		gettimeofday(&now, NULL);
+
+		long long millis = now.tv_sec * 1000 + now.tv_usec / 1000;
+		if (ttl->when_ < millis)
 		{
 			service_path path = ttl->service_path_;
 			service &service_ = 
@@ -476,10 +497,20 @@ void service_mgr::check_timeout()
 			service_ttl_.pop_front();
 			if (service_.addrs_.empty())
 				continue;
-			service_.addrs_.erase(path.service_);
+			service_.addrs_.erase(ttl->addr_);
 			delete ttl;
 		}
 		else
+		{
+			long long diff = ttl->when_ - millis;
+			diff /= 1000;
+			logger("service: [%s] addr:[%s] remain [%lld] seconds to timeout",
+				ttl->service_path_.service_path_.c_str(), 
+				ttl->addr_.c_str(),
+				diff);
+
 			return;
+		}
+			
 	}
 }

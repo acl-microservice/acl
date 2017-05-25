@@ -1,6 +1,8 @@
 #pragma once
 #include "http_rpc.h"
-class service_mgr : public acl::service_base,
+
+class service_mgr : 
+	public acl::service_base,
 	public acl::thread
 {
 private:
@@ -88,7 +90,6 @@ private:
 	virtual void *run();
 
 	acl::locker locker_;
-	int timeout_;
 
 	std::list<service_ttl*> service_ttl_;
 	std::map<acl::string, server_info> services_;

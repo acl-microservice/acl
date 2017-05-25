@@ -24,8 +24,6 @@ namespace acl
 		// 启动后台检测线程
 		conn_manager_->start_monitor(monitor);
 
-		//启动更新service 列表的线程
-		start();
 	}
 
 	http_rpc_client::status_t
@@ -48,8 +46,8 @@ namespace acl
 		{
 			status = invoke_http_req(service_name,
 				(http_request_pool*)pools[i],
-				req_data,
 				"application/json",
+				req_data,
 				resp_buffer);
 
 			if (status)
@@ -60,7 +58,7 @@ namespace acl
 
 
 	http_rpc_client::status_t http_rpc_client::invoke_http_req(
-		const string &http_path,
+		const string &service_path,
 		http_request_pool *pool,
 		const char *context_type,
 		const string&req_data,
@@ -86,7 +84,7 @@ namespace acl
 			conn->reset();
 
 		conn->request_header().
-			set_url(http_path).
+			set_url(service_path).
 			set_content_type(context_type).
 			set_keep_alive(true);
 
@@ -164,6 +162,7 @@ namespace acl
 
 		if (!find_connect_pool(service_name, pools))
 		{
+			//get service addr from nameserver
 			std::vector<string> addrs;
 			if (rpc_find_service_addr(service_name, addrs))
 			{
@@ -171,7 +170,7 @@ namespace acl
 				return find_connect_pool(service_name, pools);
 			}
 		}
-		return false;
+		return true;
 	}
 
 	bool http_rpc_client::rpc_find_service_addr(
@@ -308,19 +307,22 @@ namespace acl
 			
 			acl_assert(_my_service_info);
 			std::vector<string> &addrs = _my_service_info->addrs_;
-			// delete dead service addrs
-			for (std::vector<string>::iterator it = addrs.begin(); 
-				it !=  addrs.end(); )
+			
+			if (http_rpc_config::var_cfg_sync_del_service_addr)
 			{
-				if (service_info.server_addrs.find(*it)
-					== service_info.server_addrs.end())
+				// delete dead service addrs
+				for (std::vector<string>::iterator it = addrs.begin();
+					it != addrs.end(); )
 				{
-					conn_manager_->remove(*it);
-					it = addrs.erase(it);
+					if (service_info.server_addrs.find(*it)
+						== service_info.server_addrs.end())
+					{
+						conn_manager_->remove(*it);
+						it = addrs.erase(it);
+					}
+					else
+						it++;
 				}
-				else
-					it++;
-
 			}
 
 			//add new addr for service
@@ -345,6 +347,7 @@ namespace acl
 				}
 			}
 		}
+		logger("update service addrs success");
 	}
 
 	void http_rpc_client::add_service_addr( 

@@ -25,5 +25,7 @@ namespace acl
 		char *var_cfg_server_name;//需要自己配置
 		char *var_cfg_nameserver;
 		char *var_cfg_nameserver_addr;//需要自己配置
+
+		int var_cfg_sync_del_service_addr;
 	}
 }

@@ -74,14 +74,14 @@ namespace acl
 		void init();
 
 		status_t invoke_http_req(
-			const string &http_path,
+			const string &service_path,
 			http_request_pool *pool,
 			const char *context_type,
 			const string&req_data,
 			string &resp_buffer);
 
 		status_t invoke_http_req(
-			const string &service_name,
+			const string &service_path,
 			const char *context_type, 
 			const string&req_data, 
 			string &resp_buffer);

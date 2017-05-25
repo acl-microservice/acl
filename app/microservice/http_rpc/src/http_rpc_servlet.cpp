@@ -104,7 +104,6 @@ namespace acl
 	bool http_rpc_servlet::doError(HttpServletRequest&,
 		HttpServletResponse&)
 	{
-		logger_error("http error");
 		return false;
 	}
 

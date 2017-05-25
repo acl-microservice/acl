@@ -24,18 +24,18 @@ namespace acl
 		 * @param addr {const string &}本服务器地址
 		 * @param service_path {const string &}服务名称,
 		 * 命名规则为/{server}/{module}/{interface}
-		 * @return bool, true 注册成功，false 失败
+		 * @return {void}
 		 */
-		bool regist(const string &addr, const string& service_path);
+		void regist(const string &addr, const string& service_path);
 
 		/*
 		 * 取消注册服务
 		 * @param addr {const string &}本服务器地址
 		 * @param service_name {const string &}服务名称,
 		 * 命名规则为/{server}/{module}/{interface}
-		 * @return bool, true 注册成功，false 失败
+		 * @return {void}
 		 */
-		bool del(const string &addr, const string& service_path);
+		void del(const string &addr, const string& service_path);
 
 		/*
 		 * 停止注册服务心跳
