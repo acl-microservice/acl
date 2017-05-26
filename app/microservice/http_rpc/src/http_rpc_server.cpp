@@ -14,6 +14,17 @@ namespace acl
 		set_cfg_bool(http_rpc_config::var_conf_bool_tab);
 	}
 
+	http_rpc_server::~http_rpc_server()
+	{
+		if (redis_cluster_cli_)
+			delete redis_cluster_cli_;
+
+		for (size_t i = 0; i < services_.size();i++)
+		{
+			delete services_[i];
+		}
+	}
+
 	void http_rpc_server::proc_on_init()
 	{
 		string redis_addr(http_rpc_config::var_cfg_redis_addr);
@@ -21,8 +32,7 @@ namespace acl
 		if (redis_addr.size())
 		{
 			redis_cluster_cli_ = new acl::redis_client_cluster();
-			redis_cluster_cli_->set(redis_addr,
-				acl_var_threads_pool_limit);
+			redis_cluster_cli_->set(redis_addr,acl_var_threads_pool_limit);
 		}
 
 		//设置白名单
@@ -34,20 +44,17 @@ namespace acl
 		}
 
 		//配置nameserver 服务
+		http_rpc_client& client = http_rpc_client::get_instance();
 		string addr(http_rpc_config::var_cfg_nameserver_addr);
 		if (addr.size())
-		{
-			std::vector<string> services;
-			services.push_back(http_rpc_config::var_cfg_add_service);
-			services.push_back(http_rpc_config::var_cfg_find_service);
-			services.push_back(http_rpc_config::var_cfg_find_services);
-			services.push_back(http_rpc_config::var_cfg_del_service);
-			services.push_back(http_rpc_config::var_cfg_list_services);
+			client.add_nameserver(addr);
+		else
+			logger_warn("nameserver address empty !!!!!");
 
-			http_rpc_client::get_instance().add_service_addr(addr, services);
-		}
+		//自动从nameserver 同步service 
+		client.auto_sync_service();
+
 		//nameserver 也需要给自己发送心跳
-		http_rpc_client::get_instance().start();
 		service_register::get_instance().start();
 
 		//init child
@@ -77,8 +84,7 @@ namespace acl
 
 	bool http_rpc_server::thread_on_timeout(socket_stream* stream)
 	{
-		//keep read next time;
-		return true;
+		return false;
 	}
 
 	bool http_rpc_server::thread_on_accept(socket_stream* stream)

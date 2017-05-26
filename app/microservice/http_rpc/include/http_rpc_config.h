@@ -30,6 +30,7 @@ namespace acl
 		extern char *var_cfg_redis_addr;
 
 		//redis 连接超时时间 秒
+		//连接超时 5秒
 		extern int var_cfg_redis_conn_timeout;
 
 		//redis 读写超时时间 秒
@@ -45,6 +46,8 @@ namespace acl
 		extern char *var_cfg_allow_clients;
 
 		//rpc socket 读写超时时间 秒
+		//默认 30秒
+		//需要加上 对方处理请求的时间
 		extern int var_cfg_rw_timeout;
 
 		//namserver 服务 查询服务的接口名字
@@ -84,12 +87,19 @@ namespace acl
 		extern int var_cfg_update_service_inter;
 
 		//true 本地的service 地址 缓存会和nameserver上面的 同步删除
-		//也就是说，如果nameserver 上面删除了某个的service的地址 本地就很删除
+		//也就是说，如果nameserver 上面删除了某个的service的地址 本地就删除
 		//false 本地的service 地址 只会同步 nameserver 新添加的地址
 		//不会删除 nameserver 不存在的地址
 		//默认是 true
 		extern int var_cfg_sync_del_service_addr;
 
+		//true 本地的nameserver 地址 缓存会和nameserver上面的 同步删除
+		//也就是说，如果nameserver 上面删除了某个的nameserver 的地址 本地就删除
+		//false 本地的nameserver 地址 只会同步 nameserver 新添加的地址
+		//不会删除 nameserver 不存在的地址
+		//默认是 false
+		//建议 false，防止与 nameserver 失连
+		extern int var_cfg_sync_del_nameserver_service;
 		//默认配置
 		//用户需要copy 这个初始化的代码，添加修改成自己需要的配置
 		//var_cfg_server_name，

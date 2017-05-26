@@ -69,15 +69,19 @@ bool service_mgr::add(
 		
 		module &module = services_[path.server_].
 			modules_[path.module_];
+
 		service &service_ = module.services_[path.service_];
 
 		addr_info &addr = service_.addrs_[req.server_addr];
+
+		module.module_name_ = path.module_;
+		service_.name_ = path.service_;
+		service_.service_path_ = path.service_path_;
 
 		if (module.module_name_.empty())
 			module.module_name_ = path.module_;
 		if (service_.name_.empty())
 			service_.name_ = path.service_;
-		service_.service_path_ = path.service_path_;
 
 		timeval now;
 		gettimeofday(&now, NULL);
@@ -100,6 +104,9 @@ bool service_mgr::add(
 
 			addr.ttl_it_ = service_ttl_.
 				insert(service_ttl_.end(), ttl);
+			logger("add service: [%s] addr:[%s]",
+				path.service_path_.c_str(), 
+				req.server_addr.c_str());
 		}
 		else
 		{
@@ -138,16 +145,11 @@ bool service_mgr::find_service(
 
 	acl::lock_guard guard(locker_);
 
-	module &module = services_[path.server_]
-		.modules_[path.module_];
+	service &service_ =
+		services_[path.server_]
+		.modules_[path.module_].
+		services_[path.service_];
 
-	if (module.services_.empty())
-	{
-		resp.status = "not exist";
-		return true;
-	}
-
-	service &service_ = module.services_[path.module_];
 	if (service_.addrs_.empty())
 	{
 		resp.status = "not exist";
@@ -260,15 +262,11 @@ bool service_mgr::del_service(
 	{
 		service_path path = service_paths[i];
 
-		module &module = 
+		service &service_ =
 			services_[path.server_].
-			modules_[path.module_];
-		
-		service &service_ = 
-			module.
-			services_[path.module_];
+			modules_[path.module_].services_[path.service_];
 
-		if (module.services_.empty() || service_.addrs_.empty())
+		if (service_.addrs_.empty())
 		{
 			continue;
 		}
@@ -497,20 +495,16 @@ void service_mgr::check_timeout()
 			service_ttl_.pop_front();
 			if (service_.addrs_.empty())
 				continue;
-			service_.addrs_.erase(ttl->addr_);
-			delete ttl;
-		}
-		else
-		{
-			long long diff = ttl->when_ - millis;
-			diff /= 1000;
-			logger("service: [%s] addr:[%s] remain [%lld] seconds to timeout",
-				ttl->service_path_.service_path_.c_str(), 
-				ttl->addr_.c_str(),
-				diff);
 
-			return;
+			logger("delete service: [%s] addr:[%s] ",
+				ttl->service_path_.service_path_.c_str(),
+				ttl->addr_.c_str());
+
+			service_.addrs_.erase(ttl->addr_);
+
+			delete ttl;
+			continue;
 		}
-			
+		return;
 	}
 }

@@ -10,16 +10,19 @@ acl::master_service::master_service()
 
 bool acl::master_service::thread_on_read(acl::socket_stream* stream)
 {
+	return false;
 
 }
 
 bool acl::master_service::thread_on_accept(acl::socket_stream* stream)
 {
+	return false;
 
 }
 
 bool acl::master_service::thread_on_timeout(acl::socket_stream* stream)
 {
+	return false;
 
 }
 
@@ -40,6 +43,7 @@ void acl::master_service::thread_on_exit()
 
 bool acl::master_service::proc_exit_timer(size_t nclients, size_t nthreads)
 {
+	return false;
 
 }
 
